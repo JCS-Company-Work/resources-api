@@ -1,12 +1,33 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
-
+use App\Http\Controllers\Controller;
+use App\Services\DataService;
 class DataController extends Controller
 {
-    public function getSingleProduct() {
-        return '<h1>Single Product Data</h1>';
+
+    /**
+     * Get a single product by its ID
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getSingleProduct($id, DataService $dataService) {
+
+        // Fetch all products from the data service
+        $products = $dataService->getProducts();
+        
+        // Return single product data based on the provided ID
+        $product = collect($products)->firstWhere('postID', $id);
+
+        // If no product is found, return a 404 response
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found',
+            ], 404);
+        }
+
+        return response()->json($product);
     }
 }

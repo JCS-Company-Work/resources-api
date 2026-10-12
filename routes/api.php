@@ -2,7 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DataController;
+use App\Http\Controllers\Api\DataController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
