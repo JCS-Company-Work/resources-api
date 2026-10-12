@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\DataController;
+use App\Http\Controllers\Api\ResourceUploadController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -11,3 +12,4 @@ Route::get('/user', function (Request $request) {
 // Main PT sheet data routes
 Route::get('/products/{id}', [DataController::class, 'getSingleProduct']);
 Route::get('/range/{id}', [DataController::class, 'getRange']);
+Route::put('/resources/{resource}', [ResourceUploadController::class, 'update']);
