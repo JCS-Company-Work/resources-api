@@ -19,7 +19,7 @@ class DataService
         // Attempt to retrieve the products from the cache first
         return Cache::remember(
             'allbrands.json',
-            now()->addMinutes(10),
+            now()->addDays(30),
 
             // If the cache does not have the products, read from the JSON file
             function () {
