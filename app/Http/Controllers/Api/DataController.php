@@ -30,4 +30,29 @@ class DataController extends Controller
 
         return response()->json($product);
     }
+
+    /**
+     * Get all products within a specific range by its ID
+     *
+     * @param int $id
+     * @param DataService $dataService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getRange($id, DataService $dataService) {
+
+        // Fetch all ranges from the data service
+        $ranges = $dataService->getProducts();
+        
+        // Return all products from range based on ID
+        $range = collect($ranges)->where('rangeID', $id);
+
+        // If no range is found, return a 404 response
+        if ($range->isEmpty()) {
+            return response()->json([
+                'message' => 'Range not found',
+            ], 404);
+        }
+
+        return response()->json($range);
+    }
 }

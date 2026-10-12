@@ -10,3 +10,4 @@ Route::get('/user', function (Request $request) {
 
 // Main PT sheet data routes
 Route::get('/products/{id}', [DataController::class, 'getSingleProduct']);
+Route::get('/range/{id}', [DataController::class, 'getRange']);

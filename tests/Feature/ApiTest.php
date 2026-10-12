@@ -28,4 +28,34 @@ class ProductApiTest extends TestCase
         // Assert that the response returns a 404 status and the expected error message
         $response->assertNotFound() ->assertJson([ 'message' => 'Product not found', ]); 
     }
+
+    public function test_it_returns_all_products_in_a_range_by_id(): void
+    {
+
+        // Access the range by its ID
+        $response = $this->getJson('/api/range/1785');
+
+        // Assert that the response contains the expected range data
+        $response->assertOk()
+            ->assertJsonStructure([
+                '*' => [
+                    'postID',
+                    'rangeID',
+                    'colour',
+                ],
+            ]);
+    }
+
+    public function test_it_returns_404_for_an_unknown_range_id(): void
+    {
+
+        // Attempt to access a range that does not exist
+        $response = $this->getJson('/api/range/DOES-NOT-EXIST-12345');
+
+        // Assert that the response returns a 404 status and the expected error message
+        $response->assertNotFound()
+            ->assertJson([
+                'message' => 'Range not found',
+            ]);
+    }
 }
