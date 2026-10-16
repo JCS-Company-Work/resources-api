@@ -34,8 +34,13 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'resource_api' => [
-        'token' => env('RESOURCE_API_TOKEN'),
+
+    'api_keys' => [
+        'resource_api' => env('RESOURCE_API_TOKEN'),
+        'combined_data_api' => env('COMBINED_DATA_API_TOKEN'),
+        'product_finder_api' => env('PRODUCT_FINDER_API_TOKEN'),
+        'tm_colours_api' => env('TM_COLOURS_API_TOKEN'),
+        'samples_api' => env('SAMPLES_API_TOKEN'),
     ],
 
 ];
