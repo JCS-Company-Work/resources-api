@@ -9,23 +9,25 @@ class DataService
 {
 
     /**
-     * Get all products from the cache or JSON file
+     * Get data from the cache or JSON file based on the filename
      *
+     * @param string $filename The name of the JSON file (without the .json extension)
+     * @param string $filepath The path to the JSON file (optional, defaults to storage/app/private/)
      * @return array
      */
-    public function getProducts(): array
+    public function getData(string $filepath = 'app/private/', string $filename): array
     {
 
         // Attempt to retrieve the products from the cache first
         return Cache::remember(
-            'allbrands.json',
+            $filename,
             now()->addDays(30),
 
             // If the cache does not have the products, read from the JSON file
-            function () {
+            function () use ($filename, $filepath) {
 
                 // Read the products from the JSON file if not found in the cache
-                $path = storage_path('app/private/allbrands.json');
+                $path = storage_path($filepath . $filename . '.json');
 
                 // Ensure the JSON file exists before attempting to read it
                 return json_decode(

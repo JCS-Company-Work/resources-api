@@ -13,8 +13,14 @@ class ResourceUpdateService
      * Allowed resources for updating.
      */
     private const ALLOWED_RESOURCES = [
-        'allbrands' => 'allbrands.json',
-        'allpending' => 'allpending.json',
+        'allbrands' => [
+            'filepath' => 'app/private/combined-data/',
+            'filename' => 'allbrands.json'
+        ],
+        'allpending' => [
+            'filepath' => 'app/private/combined-data/',
+            'filename' => 'allpending.json'
+        ],
     ];
 
     /**
@@ -34,7 +40,7 @@ class ResourceUpdateService
         }
 
         // Return the allowed filename for the resource.
-        return self::ALLOWED_RESOURCES[$resource];
+        return self::ALLOWED_RESOURCES[$resource]['filename'];
     }
 
     /**
@@ -73,7 +79,7 @@ class ResourceUpdateService
         }
 
         // Prepare the paths for the resource file and its temporary counterpart.
-        $path = storage_path('app/private/' . $filename);
+        $path = storage_path(self::ALLOWED_RESOURCES[$resource]['filepath'] . $filename);
         $temporaryPath = $path . '.tmp';
 
         // Ensure the directory for the resource file exists.

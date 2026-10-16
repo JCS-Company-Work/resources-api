@@ -4,8 +4,38 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\DataService;
+
 class DataController extends Controller
 {
+
+    /**
+     * Get all products
+     *
+     * @param DataService $dataService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAllProducts(DataService $dataService) {
+
+        // Fetch all products from the data service
+        $products = $dataService->getData('app/private/combined-data/', 'allbrands');
+
+        return response()->json($products);
+    }
+
+    /**
+     * Get all pending products
+     *
+     * @param DataService $dataService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getPendingProducts(DataService $dataService) {
+
+        // Fetch all products from the data service
+        $products = $dataService->getData('app/private/combined-data/', 'allpending');
+
+        // Return data from pending products JSON
+        return response()->json($products);
+    }
 
     /**
      * Get a single product by its ID
@@ -16,7 +46,7 @@ class DataController extends Controller
     public function getSingleProduct($id, DataService $dataService) {
 
         // Fetch all products from the data service
-        $products = $dataService->getProducts();
+        $products = $dataService->getData('app/private/combined-data/', 'allbrands');
         
         // Return single product data based on the provided ID
         $product = collect($products)->firstWhere('postID', $id);
@@ -38,10 +68,10 @@ class DataController extends Controller
      * @param DataService $dataService
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getRange($id, DataService $dataService) {
+    public function getSingleRange($id, DataService $dataService) {
 
         // Fetch all ranges from the data service
-        $ranges = $dataService->getProducts();
+        $ranges = $dataService->getData('app/private/combined-data/', 'allbrands');
         
         // Return all products from range based on ID
         $range = collect($ranges)->where('rangeID', $id);
@@ -55,4 +85,19 @@ class DataController extends Controller
 
         return response()->json($range);
     }
+
+    /**
+     * Get Florim UK data
+     *
+     * @param DataService $dataService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getFlorimData(DataService $dataService) {
+
+        // Fetch Florim UK data from the data service
+        $florimData = $dataService->getData('app/private/florimuk/', 'florimuk');
+
+        return response()->json($florimData);
+    }
+
 }
