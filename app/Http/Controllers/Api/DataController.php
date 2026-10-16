@@ -100,4 +100,19 @@ class DataController extends Controller
         return response()->json($florimData);
     }
 
+    /**
+     * Get sample request data for a specific brand
+     *
+     * @param string $brand
+     * @param DataService $dataService
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getSampleRequestData($brand, DataService $dataService) {
+
+        // Fetch sample request data for the specified brand from the data service
+        $sampleRequestData = $dataService->getData('app/private/samples-tool/', $brand);
+
+        return response()->json($sampleRequestData);
+    }
+
 }

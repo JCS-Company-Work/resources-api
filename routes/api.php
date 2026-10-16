@@ -29,3 +29,6 @@ Route::get('/product-finder/product-ref-data', [ProductFinderController::class, 
 Route::get('/tm-colours/filter-panel', [TMColoursController::class, 'getTmColoursFilterPanel']);
 Route::get('/tm-colours/colour-data', [TMColoursController::class, 'getTmColoursData']);
 Route::get('/tm-colours/colour-ref-data', [TMColoursController::class, 'getTmColoursRefData']);
+
+// Sample request tool routes
+Route::get('/sample-request/{brand}', [DataController::class, 'getSampleRequestData']);
