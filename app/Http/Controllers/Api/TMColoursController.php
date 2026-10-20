@@ -2,53 +2,53 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\DataService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TMColoursController extends Controller
 {
     /**
      * Get TM Colours filter panel data.
      *
-     * @param Request $request
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getTmColoursFilterPanel(Request $request, DataService $dataService) {
+    public function getTmColoursFilterPanel(Request $request, DataService $dataService)
+    {
 
         // Fetch filter panel data
-        $products = $dataService->getData('app/private/tailor/', 'filter-panel');
+        $products = $dataService->getData('app/private/tailormade/', 'filter-panel');
 
         return response()->json($products);
 
     }
+
     /**
      * Get TM Colours main data.
      *
-     * @param Request $request
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getTmColoursData(Request $request, DataService $dataService) {
+    public function getTmColoursData(Request $request, DataService $dataService)
+    {
 
         // Fetch product data from the data service
-        $products = $dataService->getData('app/private/product-finder/porcelain-tiles/', 'tile-filter-data');
+        $products = $dataService->getData('app/private/tailormade/', 'tile-filter-data');
 
         return response()->json($products);
 
     }
+
     /**
      * Get TM Colours reference data.
      *
-     * @param Request $request
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getTmColoursRefData(Request $request, DataService $dataService) {
+    public function getTmColoursRefData(Request $request, DataService $dataService)
+    {
 
         // Fetch product reference data from the data service
-        $products = $dataService->getData('app/private/product-finder/porcelain-tiles/', 'tile-filter-ref-data');
+        $products = $dataService->getData('app/private/tailormade/', 'tile-filter-ref-data');
 
         return response()->json($products);
 
