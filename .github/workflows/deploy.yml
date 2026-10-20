@@ -1,0 +1,107 @@
+name: Deploy Resources to Live
+
+on:
+    workflow_dispatch:
+        inputs:
+            ref:
+                description: "Git branch, tag or commit to deploy"
+                required: true
+                default: "main"
+                type: string
+
+permissions:
+    contents: read
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        env:
+            SSH_HOST: ${{ secrets.SSH_HOST }}
+            PT_SSH_USER: ${{ secrets.PT_SSH_USER }}
+            DEPLOY_PATH: ${{ vars.RESOURCES_DEPLOY_PATH }}
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  ref: ${{ inputs.ref }}
+
+            - name: Configure SSH
+              env:
+                  DEPLOY_SSH_KEY: ${{ secrets.RESOURCES_DEPLOY_SSH_KEY }}
+              run: |
+                  mkdir -p ~/.ssh
+
+                  printf '%s\n' "$DEPLOY_SSH_KEY" \
+                    > ~/.ssh/resources_deploy_key
+
+                  chmod 600 ~/.ssh/resources_deploy_key
+
+                  ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+            - name: Prepare Laravel directories
+              run: |
+                  ssh \
+                    -i ~/.ssh/resources_deploy_key \
+                    -o IdentitiesOnly=yes \
+                    "$PT_SSH_USER@$SSH_HOST" \
+                    "set -e
+                     mkdir -p '$DEPLOY_PATH/storage/app/private'
+                     mkdir -p '$DEPLOY_PATH/storage/app/public'
+                     mkdir -p '$DEPLOY_PATH/storage/framework/cache/data'
+                     mkdir -p '$DEPLOY_PATH/storage/framework/sessions'
+                     mkdir -p '$DEPLOY_PATH/storage/framework/views'
+                     mkdir -p '$DEPLOY_PATH/storage/framework/testing'
+                     mkdir -p '$DEPLOY_PATH/storage/logs'
+                     mkdir -p '$DEPLOY_PATH/bootstrap/cache'
+                     test -f '$DEPLOY_PATH/.env' || {
+                       echo 'Production .env file is missing'
+                       exit 1
+                     }"
+
+            - name: Deploy to Live
+              run: |
+                  rsync -azc --delete \
+                    --omit-dir-times \
+                    --no-times \
+                    --no-perms \
+                    --no-owner \
+                    --no-group \
+                    --exclude=".git/" \
+                    --exclude=".github/" \
+                    --exclude=".env" \
+                    --exclude=".DS_Store" \
+                    --exclude="vendor/" \
+                    --exclude="node_modules/" \
+                    --exclude="storage/" \
+                    --exclude="bootstrap/cache/*.php" \
+                    --exclude="public/storage" \
+                    --exclude="public/hot" \
+                    --exclude="tests/" \
+                    --exclude="phpunit.xml.dist" \
+                    --exclude=".gitignore" \
+                    --exclude="README.md" \
+                    --exclude=".phpunit.result.cache" \
+                    -e "ssh -i ~/.ssh/resources_deploy_key -o IdentitiesOnly=yes" \
+                    ./ \
+                    "$PT_SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+
+            - name: Install dependencies and optimise Laravel
+              run: |
+                  ssh \
+                    -i ~/.ssh/resources_deploy_key \
+                    -o IdentitiesOnly=yes \
+                    "$PT_SSH_USER@$SSH_HOST" \
+                    "set -e
+                     cd '$DEPLOY_PATH'
+                     composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+                     chmod -R u+rwX storage bootstrap/cache
+                     php artisan config:clear
+                     php artisan route:clear
+                     php artisan view:clear
+                     php artisan config:cache
+                     php artisan view:cache"
+
+            - name: Complete
+              run: echo "Resources deployment complete."
