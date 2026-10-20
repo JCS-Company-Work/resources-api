@@ -98,7 +98,7 @@ class ResourceUpdateService
         }
 
         // Clear the cache for the updated resource.
-        Cache::forget($filename);
+        Cache::forget($resource);
     }
 
 }

@@ -7,21 +7,26 @@ use Tests\TestCase;
 
 class DataServiceTest extends TestCase
 {
-    public function test_products_are_cached_between_calls(): void
+    public function test_data_is_cached_between_calls(): void
     {
-
-        // Use the array cache driver for testing purposes
         config(['cache.default' => 'array']);
 
-        // Instantiate the data service
-        $service = new DataService();
+        $path = storage_path('framework/testing/data-service-test.json');
+        file_put_contents($path, '{"version":1}');
 
-        // Call the getProducts method twice to test caching
-        $firstResult = $service->getProducts();
-        $secondResult = $service->getProducts();
+        try {
+            $service = new DataService();
 
-        // Assert that the results from both calls are identical
-        $this->assertSame($firstResult, $secondResult);
-        
+            $firstResult = $service->getData('framework/testing/', 'data-service-test');
+
+            // Changing the file must not affect the cached result.
+            file_put_contents($path, '{"version":2}');
+            $secondResult = $service->getData('framework/testing/', 'data-service-test');
+
+            $this->assertSame(['version' => 1], $firstResult);
+            $this->assertSame($firstResult, $secondResult);
+        } finally {
+            @unlink($path);
+        }
     }
 }

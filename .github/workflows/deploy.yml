@@ -13,7 +13,13 @@ permissions:
     contents: read
 
 jobs:
+    test:
+        uses: ./.github/workflows/tests.yml
+        with:
+            ref: ${{ inputs.ref }}
+
     deploy:
+        needs: test
         runs-on: ubuntu-latest
 
         env:

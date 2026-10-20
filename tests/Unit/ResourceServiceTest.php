@@ -42,11 +42,11 @@ class ResourceServiceTest extends TestCase
 
     public function test_it_updates_a_resource_file_and_clears_its_cache(): void
     {
-        $path = storage_path('app/private/allbrands.json');
-        $backup = file_get_contents($path);
+        $path = storage_path('app/private/combined-data/allbrands.json');
+        $backup = file_exists($path) ? file_get_contents($path) : null;
 
         try {
-            Cache::put('allbrands.json', ['old' => 'data']);
+            Cache::put('allbrands', ['old' => 'data']);
 
             $service = new ResourceUpdateService();
             $service->update('allbrands', '{"test":"data"}');
@@ -56,10 +56,10 @@ class ResourceServiceTest extends TestCase
                 file_get_contents($path)
             );
 
-            $this->assertFalse(Cache::has('allbrands.json'));
+            $this->assertFalse(Cache::has('allbrands'));
         } finally {
-            file_put_contents($path, $backup);
-            Cache::forget('allbrands.json');
+            $backup === null ? @unlink($path) : file_put_contents($path, $backup);
+            Cache::forget('allbrands');
         }
     }
 
