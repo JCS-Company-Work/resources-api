@@ -99,7 +99,7 @@ jobs:
                       cd '$DEPLOY_PATH'
 
                       PHP_BIN=/opt/cpanel/ea-php84/root/usr/bin/php
-                      COMPOSER_BIN=/opt/cpanel/composer/bin/composer
+                      COMPOSER_BIN=/usr/local/bin/composer
 
                       \$PHP_BIN -v
                       \$PHP_BIN \$COMPOSER_BIN --version
