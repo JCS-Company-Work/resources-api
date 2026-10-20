@@ -17,8 +17,8 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-            SSH_HOST: ${{ secrets.SSH_HOST }}
-            PT_SSH_USER: ${{ secrets.PT_SSH_USER }}
+            SSH_HOST: ${{ vars.SSH_HOST }}
+            PT_SSH_USER: ${{ vars.PT_SSH_USER }}
             DEPLOY_PATH: ${{ vars.RESOURCES_DEPLOY_PATH }}
 
         steps:
