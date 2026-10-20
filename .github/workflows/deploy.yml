@@ -18,6 +18,7 @@ jobs:
 
         env:
             SSH_HOST: ${{ vars.SSH_HOST }}
+            SSH_PORT: ${{ vars.SSH_PORT }}
             PT_SSH_USER: ${{ vars.PT_SSH_USER }}
             DEPLOY_PATH: ${{ vars.RESOURCES_DEPLOY_PATH }}
 
