@@ -76,6 +76,7 @@ jobs:
                     --exclude="vendor/" \
                     --exclude="node_modules/" \
                     --exclude="storage/" \
+                    --exclude="database/*.sqlite*" \
                     --exclude="bootstrap/cache/*.php" \
                     --exclude="public/storage" \
                     --exclude="public/hot" \
