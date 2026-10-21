@@ -18,6 +18,10 @@ Route::middleware(VerifyApiToken::using('combined_data_api'))->group(function ()
     Route::get('/products/{id}', [DataController::class, 'getSingleProduct']);
     Route::get('/ranges/{id}', [DataController::class, 'getSingleRange']);
     Route::get('/pending', [DataController::class, 'getPendingProducts']);
+});
+
+// Florim UK routes
+Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
     Route::get('/florimuk', [DataController::class, 'getFlorimData']);
 });
 
