@@ -12,6 +12,7 @@ abstract class TestCase extends BaseTestCase
         'product_finder_api' => 'test-finder-token',
         'tm_colours_api' => 'test-tm-token',
         'samples_api' => 'test-samples-token',
+        'florimuk' => 'test-florimuk-token',
     ];
 
     protected function setUp(): void

@@ -16,7 +16,7 @@ class DataEndpointsTest extends TestCase
         return [
             'all products' => ['/api/products', 'app/private/combined-data/', 'allbrands', 'combined_data_api'],
             'pending products' => ['/api/pending', 'app/private/combined-data/', 'allpending', 'combined_data_api'],
-            'florim uk' => ['/api/florimuk', 'app/private/florimuk/', 'florimuk', 'combined_data_api'],
+            'florim uk' => ['/api/florimuk', 'app/private/florimuk/', 'florimuk', 'florimuk'],
             'sample request' => ['/api/sample-request/some-brand', 'app/private/samples-tool/', 'some-brand', 'samples_api'],
             'product finder filter panel' => ['/api/product-finder/filter-panel', 'app/private/product-finder/porcelain-tiles/', 'filter-panel', 'product_finder_api'],
             'product finder data' => ['/api/product-finder/product-data', 'app/private/product-finder/porcelain-tiles/', 'tile-filter-data', 'product_finder_api'],
