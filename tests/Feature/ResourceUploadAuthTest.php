@@ -41,12 +41,12 @@ class ResourceUploadAuthTest extends TestCase
             ->assertJson(['message' => 'Mock upload']);
     }
 
-    public function test_every_configured_client_key_is_accepted(): void
+    public function test_upload_rejects_other_clients_keys(): void
     {
-        foreach (array_keys(self::API_KEYS) as $client) {
+        foreach (array_diff(array_keys(self::API_KEYS), ['resource_api']) as $client) {
             $this->withApiToken($client)
                 ->putJson('/api/resources/allbrands', ['test' => 'data'])
-                ->assertOk();
+                ->assertUnauthorized();
         }
     }
 
@@ -67,11 +67,10 @@ class ResourceUploadAuthTest extends TestCase
         $this->assertNotEmpty($routes);
 
         foreach ($routes as $route) {
-            $this->assertContains(
-                VerifyApiToken::class,
-                $route->gatherMiddleware(),
-                "Route [{$route->uri()}] is missing VerifyApiToken."
-            );
+            $hasToken = collect($route->gatherMiddleware())
+                ->contains(fn ($middleware) => is_string($middleware) && str_starts_with($middleware, VerifyApiToken::class.':'));
+
+            $this->assertTrue($hasToken, "Route [{$route->uri()}] is missing VerifyApiToken.");
         }
     }
 }
