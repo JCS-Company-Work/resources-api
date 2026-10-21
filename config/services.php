@@ -41,6 +41,7 @@ return [
         'product_finder_api' => env('PRODUCT_FINDER_API_TOKEN'),
         'tm_colours_api' => env('TM_COLOURS_API_TOKEN'),
         'samples_api' => env('SAMPLES_API_TOKEN'),
+        'florimuk' => env('FLORIMUK_API_TOKEN'),
     ],
 
 ];
