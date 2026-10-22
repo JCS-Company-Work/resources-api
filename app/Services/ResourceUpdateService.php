@@ -29,9 +29,37 @@ class ResourceUpdateService
             'filepath' => 'app/private/samples-tool/',
             'filename' => 'pt.json'
         ],
+        'pp' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'pp.json'
+        ],
         'domus' => [
             'filepath' => 'app/private/samples-tool/',
             'filename' => 'domus.json'
+        ],
+        'emilgroup' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'emilgroup.json'
+        ],
+        'fondovalle' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'fondovalle.json'
+        ],
+        'mirage' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'mirage.json'
+        ],
+        'porcelaingres' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'porcelaingres.json'
+        ],
+        'tm' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'tm.json'
+        ],
+        'tm exclusive' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'tm exclusive.json'
         ],
     ];
 
