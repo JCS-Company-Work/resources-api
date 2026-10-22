@@ -41,6 +41,14 @@ class ResourceUpdateService
             'filepath' => 'app/private/samples-tool/',
             'filename' => 'emilgroup.json'
         ],
+        'florim-samples' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'florim.json'
+        ],
+        'florimuk-samples' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'florimuk.json'
+        ],
         'fondovalle' => [
             'filepath' => 'app/private/samples-tool/',
             'filename' => 'fondovalle.json'
