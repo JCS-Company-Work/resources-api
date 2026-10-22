@@ -29,7 +29,7 @@ class ResourceUpdateService
             'filepath' => 'app/private/samples-tool/',
             'filename' => 'pt.json'
         ],
-        'pp_tm' => [
+        'pp' => [
             'filepath' => 'app/private/samples-tool/',
             'filename' => 'pp.json'
         ],
