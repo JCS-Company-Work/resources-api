@@ -21,6 +21,18 @@ class ResourceUpdateService
             'filepath' => 'app/private/combined-data/',
             'filename' => 'allpending.json'
         ],
+        'florimuk' => [
+            'filepath' => 'app/private/florimuk/',
+            'filename' => 'florimuk.json'
+        ],
+        'pt' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'pt.json'
+        ],
+        'domus' => [
+            'filepath' => 'app/private/samples-tool/',
+            'filename' => 'domus.json'
+        ],
     ];
 
     /**
