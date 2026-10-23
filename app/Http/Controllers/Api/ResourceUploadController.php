@@ -15,20 +15,22 @@ class ResourceUploadController extends Controller
      * Update the specified resource with the provided content.
      *
      * @param Request $request
-     * @param string $resource
+     * @param string $resource The name of the resource to update.
+     * @param string $type The type of resource (e.g., 'combined-data').
      * @param ResourceUpdateService $service
      * @return void
      */
     public function update(
         Request $request,
         string $resource,
+        string $type,
         ResourceUpdateService $service
     ) {
 
         try {
             
             // Attempt to update the resource using the provided service.
-            $service->update($resource, $request->getContent());
+            $service->update($resource, $type, $request->getContent());
 
         } catch (InvalidArgumentException $e) {
 

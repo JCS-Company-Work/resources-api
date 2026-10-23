@@ -12,64 +12,128 @@ class ResourceUpdateService
     /**
      * Allowed resources for updating.
      */
-    private const ALLOWED_RESOURCES = [
-        'allbrands' => [
-            'filepath' => 'app/private/combined-data/',
-            'filename' => 'allbrands.json'
-        ],
-        'allpending' => [
-            'filepath' => 'app/private/combined-data/',
-            'filename' => 'allpending.json'
-        ],
-        'florimuk' => [
-            'filepath' => 'app/private/florimuk/',
-            'filename' => 'florimuk.json'
-        ],
-        'pt' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'pt.json'
-        ],
-        'pp' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'pp.json'
-        ],
-        'domus' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'domus.json'
-        ],
-        'emilgroup' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'emilgroup.json'
-        ],
-        'florim-samples' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'florim.json'
-        ],
-        'florimuk-samples' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'florimuk.json'
-        ],
-        'fondovalle' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'fondovalle.json'
-        ],
-        'mirage' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'mirage.json'
-        ],
-        'porcelaingres' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'porcelaingres.json'
-        ],
-        'tm' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'tm.json'
-        ],
-        'tm exclusive' => [
-            'filepath' => 'app/private/samples-tool/',
-            'filename' => 'tm exclusive.json'
-        ],
+
+     private const ALLOWED_RESOURCES = [
+
+     'combined-data' => [
+         'allbrands' => [
+             'filepath' => 'app/private/combined-data/',
+             'filename' => 'allbrands.json'
+         ],
+         'allpending' => [
+             'filepath' => 'app/private/combined-data/',
+             'filename' => 'allpending.json'
+         ],
+     ]
+
+        // 'florimuk' => [
+        //     'filepath' => 'app/private/florimuk/',
+        //     'filename' => 'florimuk.json'
+        // ],
+        // 'pt' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'pt.json'
+        // ],
+        // 'pp' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'pp.json'
+        // ],
+        // 'domus' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'domus.json'
+        // ],
+        // 'emilgroup' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'emilgroup.json'
+        // ],
+        // 'florim-samples' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'florim.json'
+        // ],
+        // 'florimuk-samples' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'florimuk.json'
+        // ],
+        // 'fondovalle' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'fondovalle.json'
+        // ],
+        // 'mirage' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'mirage.json'
+        // ],
+        // 'porcelaingres' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'porcelaingres.json'
+        // ],
+        // 'tm' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'tm.json'
+        // ],
+        // 'tm exclusive' => [
+        //     'filepath' => 'app/private/samples-tool/',
+        //     'filename' => 'tm exclusive.json'
+        // ],
     ];
+
+    // private const ALLOWED_RESOURCES = [
+    //     'allbrands' => [
+    //         'filepath' => 'app/private/combined-data/',
+    //         'filename' => 'allbrands.json'
+    //     ],
+    //     'allpending' => [
+    //         'filepath' => 'app/private/combined-data/',
+    //         'filename' => 'allpending.json'
+    //     ],
+    //     'florimuk' => [
+    //         'filepath' => 'app/private/florimuk/',
+    //         'filename' => 'florimuk.json'
+    //     ],
+    //     'pt' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'pt.json'
+    //     ],
+    //     'pp' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'pp.json'
+    //     ],
+    //     'domus' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'domus.json'
+    //     ],
+    //     'emilgroup' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'emilgroup.json'
+    //     ],
+    //     'florim-samples' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'florim.json'
+    //     ],
+    //     'florimuk-samples' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'florimuk.json'
+    //     ],
+    //     'fondovalle' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'fondovalle.json'
+    //     ],
+    //     'mirage' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'mirage.json'
+    //     ],
+    //     'porcelaingres' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'porcelaingres.json'
+    //     ],
+    //     'tm' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'tm.json'
+    //     ],
+    //     'tm exclusive' => [
+    //         'filepath' => 'app/private/samples-tool/',
+    //         'filename' => 'tm exclusive.json'
+    //     ],
+    // ];
 
     /**
      * Get the allowed filename for the specified resource.
@@ -77,18 +141,18 @@ class ResourceUpdateService
      * @param string $resource
      * @return string
      */
-    public function getAllowedFilename(string $resource): string
+    public function getAllowedFilename(string $resource, string $type): string
     {
 
         // Check if the resource is allowed and return the corresponding filename.
-        if (! isset(self::ALLOWED_RESOURCES[$resource])) {
+        if (! isset(self::ALLOWED_RESOURCES[$type][$resource])) {
             throw new \InvalidArgumentException(
                 "Resource [{$resource}] is not allowed."
             );
         }
 
         // Return the allowed filename for the resource.
-        return self::ALLOWED_RESOURCES[$resource]['filename'];
+        return self::ALLOWED_RESOURCES[$type][$resource]['filename'];
     }
 
     /**
@@ -98,10 +162,10 @@ class ResourceUpdateService
      * @param string $content
      * @return void
      */
-    public function update(string $resource, string $content): void
+    public function update(string $resource, string $type, string $content): void
     {
         // Get the allowed filename for the resource.
-        $filename = $this->getAllowedFilename($resource);
+        $filename = $this->getAllowedFilename($resource, $type);
 
         // Decode the JSON content into an associative array.
         try {
@@ -127,7 +191,7 @@ class ResourceUpdateService
         }
 
         // Prepare the paths for the resource file and its temporary counterpart.
-        $path = storage_path(self::ALLOWED_RESOURCES[$resource]['filepath'] . $filename);
+        $path = storage_path(self::ALLOWED_RESOURCES[$type][$resource]['filepath'] . $filename);
         $temporaryPath = $path . '.tmp';
 
         // Ensure the directory for the resource file exists.
