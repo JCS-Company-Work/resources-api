@@ -77,7 +77,7 @@ class ResourceUpdateService
             ],
         ],
         'product-finder' => [
-            'porcelain-tiles' => [
+            'porcelaintiles' => [
                 'filter-panel' => [
                     'filepath' => 'app/private/product-finder/porcelaintiles',
                     'filename' => 'filter-panel.json'
