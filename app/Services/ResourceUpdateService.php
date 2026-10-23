@@ -72,11 +72,13 @@ class ResourceUpdateService
             ],
         ],
         'florimuk' => [
-            'filepath' => 'app/private/florimuk/',
-            'filename' => 'florimuk.json'
+            'florimuk' => [
+                'filepath' => 'app/private/florimuk/',
+                'filename' => 'florimuk.json'
+            ],
         ],
     ];
-    
+
     /**
      * Get the allowed filename for the specified resource.
      *
