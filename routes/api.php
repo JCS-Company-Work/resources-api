@@ -26,7 +26,7 @@ Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
 });
 
 // File upload route
-Route::put('/resources/{resource}', [ResourceUploadController::class, 'update'])
+Route::put('/resources/{type}/{resource}', [ResourceUploadController::class, 'update'])
     ->middleware(VerifyApiToken::using('resource_api'));
 
 // Product Finder routes

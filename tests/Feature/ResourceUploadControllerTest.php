@@ -25,11 +25,11 @@ class ResourceUploadControllerTest extends TestCase
     public function test_it_returns_success_when_the_service_updates_the_resource(): void
     {
         $this->mock(ResourceUpdateService::class, function ($mock) {
-            $mock->shouldReceive('update')->once()->with('allbrands', '{"a":1}');
+            $mock->shouldReceive('update')->once()->with('allbrands', 'combined-data', '{"a":1}');
         });
 
         $this->withApiToken('resource_api')
-            ->call('PUT', '/api/resources/allbrands', [], [], [], $this->rawJsonServer(), '{"a":1}')
+            ->call('PUT', '/api/resources/combined-data/allbrands', [], [], [], $this->rawJsonServer(), '{"a":1}')
             ->assertOk()
             ->assertJson(['message' => 'Resource updated successfully.']);
     }
@@ -41,7 +41,7 @@ class ResourceUploadControllerTest extends TestCase
         });
 
         $this->withApiToken('resource_api')
-            ->putJson('/api/resources/allbrands', ['a' => 1])
+            ->putJson('/api/resources/combined-data/allbrands', ['a' => 1])
             ->assertStatus(422)
             ->assertJson(['message' => 'Invalid JSON supplied.']);
     }
@@ -53,7 +53,7 @@ class ResourceUploadControllerTest extends TestCase
         });
 
         $this->withApiToken('resource_api')
-            ->putJson('/api/resources/allbrands', ['a' => 1])
+            ->putJson('/api/resources/combined-data/allbrands', ['a' => 1])
             ->assertStatus(500)
             ->assertJson(['message' => 'Could not update the resource.']);
     }
@@ -61,14 +61,14 @@ class ResourceUploadControllerTest extends TestCase
     public function test_it_returns_422_for_an_unknown_resource(): void
     {
         $this->withApiToken('resource_api')
-            ->putJson('/api/resources/not-allowed', ['a' => 1])
+            ->putJson('/api/resources/combined-data/not-allowed', ['a' => 1])
             ->assertStatus(422);
     }
 
     public function test_it_returns_422_for_a_non_json_body(): void
     {
         $this->withApiToken('resource_api')
-            ->call('PUT', '/api/resources/allbrands', [], [], [], $this->rawJsonServer(), '{invalid json')
+            ->call('PUT', '/api/resources/combined-data/allbrands', [], [], [], $this->rawJsonServer(), '{invalid json')
             ->assertStatus(422);
     }
 }

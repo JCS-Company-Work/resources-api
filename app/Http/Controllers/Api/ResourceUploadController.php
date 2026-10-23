@@ -3,32 +3,29 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ResourceUpdateService;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
 use RuntimeException;
-use App\Services\ResourceUpdateService;
 
 class ResourceUploadController extends Controller
 {
-
     /**
      * Update the specified resource with the provided content.
      *
-     * @param Request $request
-     * @param string $resource The name of the resource to update.
-     * @param string $type The type of resource (e.g., 'combined-data').
-     * @param ResourceUpdateService $service
+     * @param  string  $resource  The name of the resource to update.
+     * @param  string  $type  The type of resource (e.g., 'combined-data').
      * @return void
      */
     public function update(
         Request $request,
-        string $resource,
         string $type,
+        string $resource,
         ResourceUpdateService $service
     ) {
 
         try {
-            
+
             // Attempt to update the resource using the provided service.
             $service->update($resource, $type, $request->getContent());
 

@@ -10,34 +10,34 @@ class ResourceServiceTest extends TestCase
 {
     public function test_get_allowed_filename_returns_correct_filename(): void
     {
-        $service = new ResourceUpdateService();
+        $service = new ResourceUpdateService;
 
-        $this->assertSame('allbrands.json', $service->getAllowedFilename('allbrands'));
-        $this->assertSame('allpending.json', $service->getAllowedFilename('allpending'));
+        $this->assertSame('allbrands.json', $service->getAllowedFilename('allbrands', 'combined-data'));
+        $this->assertSame('allpending.json', $service->getAllowedFilename('allpending', 'combined-data'));
     }
 
     public function test_get_allowed_filename_throws_exception_for_invalid_resource(): void
     {
-        $service = new ResourceUpdateService();
+        $service = new ResourceUpdateService;
 
         $this->expectException(\InvalidArgumentException::class);
-        $service->getAllowedFilename('invalid_resource');
+        $service->getAllowedFilename('invalid_resource', 'combined-data');
     }
 
     public function test_update_rejects_invalid_json(): void
     {
-        $service = new ResourceUpdateService();
+        $service = new ResourceUpdateService;
 
         $this->expectException(\InvalidArgumentException::class);
-        $service->update('allbrands', '{invalid json');
+        $service->update('allbrands', 'combined-data', '{invalid json');
     }
 
     public function test_update_rejects_json_string(): void
     {
-        $service = new ResourceUpdateService();
+        $service = new ResourceUpdateService;
 
         $this->expectException(\InvalidArgumentException::class);
-        $service->update('allbrands', '"hello"');
+        $service->update('allbrands', 'combined-data', '"hello"');
     }
 
     public function test_it_updates_a_resource_file_and_clears_its_cache(): void
@@ -48,8 +48,8 @@ class ResourceServiceTest extends TestCase
         try {
             Cache::put('allbrands', ['old' => 'data']);
 
-            $service = new ResourceUpdateService();
-            $service->update('allbrands', '{"test":"data"}');
+            $service = new ResourceUpdateService;
+            $service->update('allbrands', 'combined-data', '{"test":"data"}');
 
             $this->assertSame(
                 '{"test":"data"}',
@@ -62,5 +62,4 @@ class ResourceServiceTest extends TestCase
             Cache::forget('allbrands');
         }
     }
-
 }
