@@ -12,7 +12,6 @@ class ResourceUpdateService
     /**
      * Allowed resources for updating.
      */
-
      private const ALLOWED_RESOURCES = [
 
         'combined-data' => [
@@ -77,6 +76,36 @@ class ResourceUpdateService
                 'filename' => 'florimuk.json'
             ],
         ],
+        'product-finder' => [
+            'porcelain-tiles' => [
+                'filter-panel' => [
+                    'filepath' => 'app/private/product-finder/porcelaintiles',
+                    'filename' => 'filter-panel.json'
+                ],
+                'tile-filter-data' => [
+                    'filepath' => 'app/private/product-finder/porcelaintiles',
+                    'filename' => 'tile-filter-data.json'
+                ],
+                'tile-filter-ref-data' => [
+                    'filepath' => 'app/private/product-finder/porcelaintiles',
+                    'filename' => 'tile-filter-ref-data.json'
+                ],
+            ],
+            'tailormade' => [
+                'filter-panel' => [
+                    'filepath' => 'app/private/product-finder/tailormade',
+                    'filename' => 'filter-panel.json'
+                ],
+                'tile-filter-data' => [
+                    'filepath' => 'app/private/product-finder/tailormade',
+                    'filename' => 'tile-filter-data.json'
+                ],
+                'tile-filter-ref-data' => [
+                    'filepath' => 'app/private/product-finder/tailormade',
+                    'filename' => 'tile-filter-ref-data.json'
+                ],
+            ],
+        ]
     ];
 
     /**
