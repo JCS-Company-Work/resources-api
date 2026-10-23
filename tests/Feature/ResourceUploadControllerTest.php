@@ -25,7 +25,7 @@ class ResourceUploadControllerTest extends TestCase
     public function test_it_returns_success_when_the_service_updates_the_resource(): void
     {
         $this->mock(ResourceUpdateService::class, function ($mock) {
-            $mock->shouldReceive('update')->once()->with('allbrands', 'combined-data', '{"a":1}');
+            $mock->shouldReceive('update')->once()->with('allbrands', 'combined-data', '', '{"a":1}');
         });
 
         $this->withApiToken('resource_api')
@@ -70,5 +70,17 @@ class ResourceUploadControllerTest extends TestCase
         $this->withApiToken('resource_api')
             ->call('PUT', '/api/resources/combined-data/allbrands', [], [], [], $this->rawJsonServer(), '{invalid json')
             ->assertStatus(422);
+    }
+
+    public function test_it_passes_the_product_finder_brand_to_the_service(): void
+    {
+        $this->mock(ResourceUpdateService::class, function ($mock) {
+            $mock->shouldReceive('update')->once()->with('filter-panel', 'product-finder', 'porcelaintiles', '{"a":1}');
+        });
+
+        $this->withApiToken('resource_api')
+            ->call('PUT', '/api/resources/product-finder/porcelaintiles/filter-panel', [], [], [], $this->rawJsonServer(), '{"a":1}')
+            ->assertOk()
+            ->assertJson(['message' => 'Resource updated successfully.']);
     }
 }

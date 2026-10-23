@@ -8,137 +8,147 @@ use JsonException;
 
 class ResourceUpdateService
 {
-
     /**
      * Allowed resources for updating.
      */
-     private const ALLOWED_RESOURCES = [
+    private const ALLOWED_RESOURCES = [
 
         'combined-data' => [
             'allbrands' => [
                 'filepath' => 'app/private/combined-data/',
-                'filename' => 'allbrands.json'
+                'filename' => 'allbrands.json',
             ],
             'allpending' => [
                 'filepath' => 'app/private/combined-data/',
-                'filename' => 'allpending.json'
+                'filename' => 'allpending.json',
             ],
         ],
         'samples-tool' => [
             'pt' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'pt.json'
+                'filename' => 'pt.json',
             ],
             'pp' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'pp.json'
+                'filename' => 'pp.json',
             ],
             'domus' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'domus.json'
+                'filename' => 'domus.json',
             ],
             'emilgroup' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'emilgroup.json'
+                'filename' => 'emilgroup.json',
             ],
             'florim' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'florim.json'
+                'filename' => 'florim.json',
             ],
             'florimuk' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'florimuk.json'
+                'filename' => 'florimuk.json',
             ],
             'fondovalle' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'fondovalle.json'
+                'filename' => 'fondovalle.json',
             ],
             'mirage' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'mirage.json'
+                'filename' => 'mirage.json',
             ],
             'porcelaingres' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'porcelaingres.json'
+                'filename' => 'porcelaingres.json',
             ],
             'tm' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'tm.json'
+                'filename' => 'tm.json',
             ],
             'tm exclusive' => [
                 'filepath' => 'app/private/samples-tool/',
-                'filename' => 'tm exclusive.json'
+                'filename' => 'tm exclusive.json',
             ],
         ],
         'florimuk' => [
             'florimuk' => [
                 'filepath' => 'app/private/florimuk/',
-                'filename' => 'florimuk.json'
+                'filename' => 'florimuk.json',
             ],
         ],
         'product-finder' => [
             'porcelaintiles' => [
                 'filter-panel' => [
                     'filepath' => 'app/private/product-finder/porcelaintiles',
-                    'filename' => 'filter-panel.json'
+                    'filename' => 'filter-panel.json',
                 ],
                 'tile-filter-data' => [
                     'filepath' => 'app/private/product-finder/porcelaintiles',
-                    'filename' => 'tile-filter-data.json'
+                    'filename' => 'tile-filter-data.json',
                 ],
                 'tile-filter-ref-data' => [
                     'filepath' => 'app/private/product-finder/porcelaintiles',
-                    'filename' => 'tile-filter-ref-data.json'
+                    'filename' => 'tile-filter-ref-data.json',
                 ],
             ],
             'tailormade' => [
                 'filter-panel' => [
                     'filepath' => 'app/private/product-finder/tailormade',
-                    'filename' => 'filter-panel.json'
+                    'filename' => 'filter-panel.json',
                 ],
                 'tile-filter-data' => [
                     'filepath' => 'app/private/product-finder/tailormade',
-                    'filename' => 'tile-filter-data.json'
+                    'filename' => 'tile-filter-data.json',
                 ],
                 'tile-filter-ref-data' => [
                     'filepath' => 'app/private/product-finder/tailormade',
-                    'filename' => 'tile-filter-ref-data.json'
+                    'filename' => 'tile-filter-ref-data.json',
                 ],
             ],
-        ]
+        ],
     ];
 
     /**
      * Get the allowed filename for the specified resource.
      *
-     * @param string $resource
-     * @return string
+     * @param  string  $resource  The resource name (e.g., 'filter-panel', 'tile-filter-data').
+     * @param  string  $type  The type of the resource (e.g., 'porcelaintiles', 'tailormade').
      */
-    public function getAllowedFilename(string $resource, string $type): string
+    public function getAllowedFilename(string $resource, string $type, string $brand): string
     {
 
+        if ($type === 'product-finder') {
+            if (! isset(self::ALLOWED_RESOURCES[$type][$brand][$resource])) {
+                throw new \InvalidArgumentException(
+                    "Resource [{$resource}] is not allowed for brand [{$brand}]."
+                );
+            }
+        }
+
         // Check if the resource is allowed and return the corresponding filename.
-        if (! isset(self::ALLOWED_RESOURCES[$type][$resource])) {
+        if ($type !== 'product-finder' && ! isset(self::ALLOWED_RESOURCES[$type][$resource])) {
             throw new \InvalidArgumentException(
                 "Resource [{$resource}] is not allowed."
             );
         }
 
         // Return the allowed filename for the resource.
-        return self::ALLOWED_RESOURCES[$type][$resource]['filename'];
+        return $type === 'product-finder'
+            ? self::ALLOWED_RESOURCES[$type][$brand][$resource]['filename']
+            : self::ALLOWED_RESOURCES[$type][$resource]['filename'];
     }
 
     /**
      * Update the specified resource with the provided content.
      *
-     * @param string $resource
-     * @param string $content
-     * @return void
+     * @param  string  $resource  The resource name (e.g., 'filter-panel', 'tile-filter-data').
+     * @param  string  $type  The type of the resource (e.g., 'porcelaintiles', 'tailormade').
+     * @param  string  $brand  The brand associated with the resource.
+     * @param  string  $content  The JSON content to update the resource with.
      */
-    public function update(string $resource, string $type, string $content): void
+    public function update(string $resource, string $type, string $brand, string $content): void
     {
         // Get the allowed filename for the resource.
-        $filename = $this->getAllowedFilename($resource, $type);
+        $filename = $this->getAllowedFilename($resource, $type, $brand);
 
         // Decode the JSON content into an associative array.
         try {
@@ -164,8 +174,11 @@ class ResourceUpdateService
         }
 
         // Prepare the paths for the resource file and its temporary counterpart.
-        $path = storage_path(self::ALLOWED_RESOURCES[$type][$resource]['filepath'] . $filename);
-        $temporaryPath = $path . '.tmp';
+        $resourcePath = $type === 'product-finder'
+            ? self::ALLOWED_RESOURCES[$type][$brand][$resource]['filepath']
+            : self::ALLOWED_RESOURCES[$type][$resource]['filepath'];
+        $path = storage_path(rtrim($resourcePath, DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.$filename);
+        $temporaryPath = $path.'.tmp';
 
         // Ensure the directory for the resource file exists.
         File::ensureDirectoryExists(dirname($path));
@@ -185,5 +198,4 @@ class ResourceUpdateService
         // Clear the cache for the updated resource.
         Cache::forget($resource);
     }
-
 }
