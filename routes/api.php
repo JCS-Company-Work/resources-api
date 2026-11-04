@@ -18,16 +18,13 @@ Route::middleware(VerifyApiToken::using('combined_data_api'))->group(function ()
     Route::get('/products/{id}', [DataController::class, 'getSingleProduct']);
     Route::get('/ranges/{id}', [DataController::class, 'getSingleRange']);
     Route::get('/pending', [DataController::class, 'getPendingProducts']);
+    Route::get('/ptsitetemplates', [DataController::class, 'getPtSiteTemplates']);
 });
 
 // Florim UK routes
 Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
     Route::get('/florimuk', [DataController::class, 'getFlorimData']);
 });
-
-// // File upload route
-// Route::put('/resources/{type}/{resource}', [ResourceUploadController::class, 'update'])
-//     ->middleware(VerifyApiToken::using('resource_api'));
 
 // File upload resource routes
 Route::middleware(VerifyApiToken::using('resource_api'))

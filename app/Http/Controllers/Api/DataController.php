@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\DataService;
+use Illuminate\Support\Arr;
 
 class DataController extends Controller
 {
@@ -113,6 +114,32 @@ class DataController extends Controller
         $sampleRequestData = $dataService->getData('app/private/samples-tool/', $brand);
 
         return response()->json($sampleRequestData);
+    }
+
+    public function getPtSiteTemplates(DataService $dataService) {
+
+        // Fetch PT site templates from the data service
+        $ptSiteTemplates = $dataService->getData('app/private/combined-data/', 'allbrands');
+
+        $hiddenFields = [
+            'Price',
+            'Partner_Price',
+            'Florimuk_Price',
+            'Man_Code',
+            'Mesh',
+            'Factory_Collection',
+            'Factory_Range',
+            'Factory_Colour',
+            'Factory_Surface',
+            'Florimuk_Item',
+            'Agreement',
+        ];
+
+        $templates = collect($ptSiteTemplates)
+            ->map(fn (array $item): array => Arr::except($item, $hiddenFields))
+            ->values();
+
+        return response()->json($templates);
     }
 
 }
