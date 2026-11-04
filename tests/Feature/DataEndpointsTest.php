@@ -53,13 +53,13 @@ class DataEndpointsTest extends TestCase
     public function test_pt_site_templates_excludes_hidden_fields_for_every_item(): void
     {
         $hidden = [
-            'Price', 'Partner_Price', 'Florimuk_Price', 'Man_Code', 'Mesh', 'Factory_Collection',
-            'Factory_Range', 'Factory_Colour', 'Factory_Surface', 'Florimuk_Item', 'Agreement',
+            'price', 'partnerPrice', 'florimukPrice', 'manCode', 'mesh', 'factoryCollection',
+            'factoryRange', 'factoryColour', 'factorySurface', 'florimukItem', 'agreement',
         ];
 
         $items = [
-            ['postID' => 1, 'name' => 'First', ...array_fill_keys($hidden, 'secret')],
-            ['postID' => 2, 'name' => 'Second', ...array_fill_keys($hidden, 'secret')],
+            ['postID' => 1, 'productCode' => 'A1', ...array_fill_keys($hidden, 'secret')],
+            ['postID' => 2, 'productCode' => 'B2', ...array_fill_keys($hidden, 'secret')],
         ];
 
         $this->mock(DataService::class, function ($mock) use ($items) {
@@ -70,8 +70,8 @@ class DataEndpointsTest extends TestCase
             ->getJson('/api/ptsitetemplates')
             ->assertOk()
             ->assertExactJson([
-                ['postID' => 1, 'name' => 'First'],
-                ['postID' => 2, 'name' => 'Second'],
+                ['postID' => 1, 'productCode' => 'A1'],
+                ['postID' => 2, 'productCode' => 'B2'],
             ]);
     }
 

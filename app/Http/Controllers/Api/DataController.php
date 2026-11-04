@@ -4,18 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\DataService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 
 class DataController extends Controller
 {
-
     /**
      * Get all products
      *
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getAllProducts(DataService $dataService) {
+    public function getAllProducts(DataService $dataService)
+    {
 
         // Fetch all products from the data service
         $products = $dataService->getData('app/private/combined-data/', 'allbrands');
@@ -26,10 +26,10 @@ class DataController extends Controller
     /**
      * Get all pending products
      *
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getPendingProducts(DataService $dataService) {
+    public function getPendingProducts(DataService $dataService)
+    {
 
         // Fetch all products from the data service
         $products = $dataService->getData('app/private/combined-data/', 'allpending');
@@ -41,19 +41,20 @@ class DataController extends Controller
     /**
      * Get a single product by its ID
      *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $id
+     * @return JsonResponse
      */
-    public function getSingleProduct($id, DataService $dataService) {
+    public function getSingleProduct($id, DataService $dataService)
+    {
 
         // Fetch all products from the data service
         $products = $dataService->getData('app/private/combined-data/', 'allbrands');
-        
+
         // Return single product data based on the provided ID
         $product = collect($products)->firstWhere('postID', $id);
 
         // If no product is found, return a 404 response
-        if (!$product) {
+        if (! $product) {
             return response()->json([
                 'message' => 'Product not found',
             ], 404);
@@ -65,15 +66,15 @@ class DataController extends Controller
     /**
      * Get all products within a specific range by its ID
      *
-     * @param int $id
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @param  int  $id
+     * @return JsonResponse
      */
-    public function getSingleRange($id, DataService $dataService) {
+    public function getSingleRange($id, DataService $dataService)
+    {
 
         // Fetch all ranges from the data service
         $ranges = $dataService->getData('app/private/combined-data/', 'allbrands');
-        
+
         // Return all products from range based on ID
         $range = collect($ranges)->where('rangeID', $id);
 
@@ -90,10 +91,10 @@ class DataController extends Controller
     /**
      * Get Florim UK data
      *
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function getFlorimData(DataService $dataService) {
+    public function getFlorimData(DataService $dataService)
+    {
 
         // Fetch Florim UK data from the data service
         $florimData = $dataService->getData('app/private/florimuk/', 'florimuk');
@@ -104,11 +105,11 @@ class DataController extends Controller
     /**
      * Get sample request data for a specific brand
      *
-     * @param string $brand
-     * @param DataService $dataService
-     * @return \Illuminate\Http\JsonResponse
+     * @param  string  $brand
+     * @return JsonResponse
      */
-    public function getSampleRequestData($brand, DataService $dataService) {
+    public function getSampleRequestData($brand, DataService $dataService)
+    {
 
         // Fetch sample request data for the specified brand from the data service
         $sampleRequestData = $dataService->getData('app/private/samples-tool/', $brand);
@@ -116,7 +117,8 @@ class DataController extends Controller
         return response()->json($sampleRequestData);
     }
 
-    public function getPtSiteTemplates(DataService $dataService) {
+    public function getPtSiteTemplates(DataService $dataService)
+    {
 
         // Fetch PT site templates from the data service
         $ptSiteTemplates = $dataService->getData('app/private/combined-data/', 'allbrands');
@@ -126,7 +128,7 @@ class DataController extends Controller
             'partnerPrice',
             'florimukPrice',
             'manCode',
-            'Mesh',
+            'mesh',
             'factoryCollection',
             'factoryRange',
             'factoryColour',
@@ -141,5 +143,4 @@ class DataController extends Controller
 
         return response()->json($templates);
     }
-
 }
