@@ -50,6 +50,36 @@ class DataEndpointsTest extends TestCase
             ->assertExactJson($payload);
     }
 
+    public function test_pt_site_templates_excludes_hidden_fields_for_every_item(): void
+    {
+        $hidden = [
+            'Price', 'Partner_Price', 'Florimuk_Price', 'Man_Code', 'Mesh', 'Factory_Collection',
+            'Factory_Range', 'Factory_Colour', 'Factory_Surface', 'Florimuk_Item', 'Agreement',
+        ];
+
+        $items = [
+            ['postID' => 1, 'name' => 'First', ...array_fill_keys($hidden, 'secret')],
+            ['postID' => 2, 'name' => 'Second', ...array_fill_keys($hidden, 'secret')],
+        ];
+
+        $this->mock(DataService::class, function ($mock) use ($items) {
+            $mock->shouldReceive('getData')->once()->with('app/private/combined-data/', 'allbrands')->andReturn($items);
+        });
+
+        $this->withApiToken('combined_data_api')
+            ->getJson('/api/ptsitetemplates')
+            ->assertOk()
+            ->assertExactJson([
+                ['postID' => 1, 'name' => 'First'],
+                ['postID' => 2, 'name' => 'Second'],
+            ]);
+    }
+
+    public function test_pt_site_templates_requires_a_token(): void
+    {
+        $this->getJson('/api/ptsitetemplates')->assertUnauthorized();
+    }
+
     #[DataProvider('endpoints')]
     public function test_endpoint_rejects_other_clients_keys(string $uri, string $path, string $file, string $client): void
     {

@@ -122,17 +122,17 @@ class DataController extends Controller
         $ptSiteTemplates = $dataService->getData('app/private/combined-data/', 'allbrands');
 
         $hiddenFields = [
-            'Price',
-            'Partner_Price',
-            'Florimuk_Price',
-            'Man_Code',
+            'price',
+            'partnerPrice',
+            'florimukPrice',
+            'manCode',
             'Mesh',
-            'Factory_Collection',
-            'Factory_Range',
-            'Factory_Colour',
-            'Factory_Surface',
-            'Florimuk_Item',
-            'Agreement',
+            'factoryCollection',
+            'factoryRange',
+            'factoryColour',
+            'factorySurface',
+            'florimukItem',
+            'agreement',
         ];
 
         $templates = collect($ptSiteTemplates)
