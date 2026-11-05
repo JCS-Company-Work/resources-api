@@ -75,6 +75,42 @@ class DataEndpointsTest extends TestCase
             ]);
     }
 
+    public function test_product_finder_all_combines_every_dataset(): void
+    {
+        $path = 'app/private/product-finder/porcelain-tiles/';
+        $datasets = [
+            'filter-panel' => [['filter' => 'colour']],
+            'tile-filter-data' => [['postID' => 1]],
+            'tile-filter-ref-data' => [['ref' => 'A']],
+        ];
+
+        $this->mock(DataService::class, function ($mock) use ($path, $datasets) {
+            foreach ($datasets as $file => $data) {
+                $mock->shouldReceive('getData')->once()->with($path, $file)->andReturn($data);
+            }
+        });
+
+        $this->withApiToken('product_finder_api')
+            ->getJson('/api/product-finder/all')
+            ->assertOk()
+            ->assertExactJson([
+                'filterPanel' => $datasets['filter-panel'],
+                'productData' => $datasets['tile-filter-data'],
+                'productRefData' => $datasets['tile-filter-ref-data'],
+            ]);
+    }
+
+    public function test_product_finder_all_requires_the_product_finder_token(): void
+    {
+        $this->getJson('/api/product-finder/all')->assertUnauthorized();
+
+        foreach (array_diff(array_keys(self::API_KEYS), ['product_finder_api']) as $otherClient) {
+            $this->withApiToken($otherClient)
+                ->getJson('/api/product-finder/all')
+                ->assertUnauthorized();
+        }
+    }
+
     public function test_pt_site_templates_requires_a_token(): void
     {
         $this->getJson('/api/ptsitetemplates')->assertUnauthorized();

@@ -29,14 +29,15 @@ Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
 // File upload resource routes
 Route::middleware(VerifyApiToken::using('resource_api'))
     ->group(function () {
-    Route::put('/resources/{type}/{filename}', [ResourceUploadController::class, 'update']);
-    Route::put('/resources/product-finder/{brand}/{filename}', [ResourceUploadController::class, 'update']);
-});
+        Route::put('/resources/{type}/{filename}', [ResourceUploadController::class, 'update']);
+        Route::put('/resources/product-finder/{brand}/{filename}', [ResourceUploadController::class, 'update']);
+    });
 
 // Product Finder routes
 Route::middleware(VerifyApiToken::using('product_finder_api'))
     ->prefix('product-finder')
     ->group(function () {
+        Route::get('/all', [ProductFinderController::class, 'getAllProductFinderData']);
         Route::get('/filter-panel', [ProductFinderController::class, 'getProductFinderFilterPanel']);
         Route::get('/product-data', [ProductFinderController::class, 'getProductFinderData']);
         Route::get('/product-ref-data', [ProductFinderController::class, 'getProductFinderRefData']);
