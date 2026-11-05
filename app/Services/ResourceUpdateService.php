@@ -77,17 +77,17 @@ class ResourceUpdateService
             ],
         ],
         'product-finder' => [
-            'porcelaintiles' => [
+            'porcelain-tiles' => [
                 'filter-panel' => [
-                    'filepath' => 'app/private/product-finder/porcelaintiles',
+                    'filepath' => 'app/private/product-finder/porcelain-tiles',
                     'filename' => 'filter-panel.json',
                 ],
                 'tile-filter-data' => [
-                    'filepath' => 'app/private/product-finder/porcelaintiles',
+                    'filepath' => 'app/private/product-finder/porcelain-tiles',
                     'filename' => 'tile-filter-data.json',
                 ],
                 'tile-filter-ref-data' => [
-                    'filepath' => 'app/private/product-finder/porcelaintiles',
+                    'filepath' => 'app/private/product-finder/porcelain-tiles',
                     'filename' => 'tile-filter-ref-data.json',
                 ],
             ],
