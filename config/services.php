@@ -43,5 +43,9 @@ return [
         'samples_api' => env('SAMPLES_API_TOKEN'),
         'florimuk' => env('FLORIMUK_API_TOKEN'),
     ],
+    'hub_cache_purge' => [
+        'url' => env('HUB_CACHE_PURGE_URL'),
+        'token' => env('HUB_CACHE_PURGE_TOKEN'),
+    ],
 
 ];

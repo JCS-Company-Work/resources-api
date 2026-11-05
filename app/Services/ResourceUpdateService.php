@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 
 class ResourceUpdateService
@@ -108,6 +109,19 @@ class ResourceUpdateService
     ];
 
     /**
+     * Variable for the LiteSpeedPurgeService instance.
+     */
+    private LiteSpeedPurgeService $liteSpeedPurgeService;
+
+    /**
+     * Constructor for the ResourceUpdateService.
+     */
+    public function __construct(LiteSpeedPurgeService $liteSpeedPurgeService)
+    {
+        $this->liteSpeedPurgeService = $liteSpeedPurgeService;
+    }
+
+    /**
      * Get the allowed filename for the specified resource.
      *
      * @param  string  $resource  The resource name (e.g., 'filter-panel', 'tile-filter-data').
@@ -197,5 +211,15 @@ class ResourceUpdateService
 
         // Clear the cache for the updated resource.
         Cache::forget($resource);
+
+        try {
+            // Purge the Hub cache using the LiteSpeedPurgeService.
+            $this->liteSpeedPurgeService->purgeHub();
+        } catch (\Throwable $e) {
+            Log::error('Hub cache purge failed after resource update.', [
+                'resource' => $resource,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

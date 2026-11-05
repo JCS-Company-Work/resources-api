@@ -2,15 +2,31 @@
 
 namespace Tests\Unit;
 
+use App\Services\LiteSpeedPurgeService;
 use App\Services\ResourceUpdateService;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Mockery\MockInterface;
+use RuntimeException;
 use Tests\TestCase;
 
 class ResourceServiceTest extends TestCase
 {
+    private MockInterface $purgeService;
+
+    private ResourceUpdateService $service;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->purgeService = $this->mock(LiteSpeedPurgeService::class);
+        $this->service = new ResourceUpdateService($this->purgeService);
+    }
+
     public function test_get_allowed_filename_returns_correct_filename(): void
     {
-        $service = new ResourceUpdateService;
+        $service = $this->service;
 
         $this->assertSame('allbrands.json', $service->getAllowedFilename('allbrands', 'combined-data', ''));
         $this->assertSame('allpending.json', $service->getAllowedFilename('allpending', 'combined-data', ''));
@@ -20,7 +36,7 @@ class ResourceServiceTest extends TestCase
 
     public function test_get_allowed_filename_throws_exception_for_invalid_resource(): void
     {
-        $service = new ResourceUpdateService;
+        $service = $this->service;
 
         $this->expectException(\InvalidArgumentException::class);
         $service->getAllowedFilename('invalid_resource', 'combined-data', '');
@@ -28,7 +44,7 @@ class ResourceServiceTest extends TestCase
 
     public function test_get_allowed_filename_rejects_an_invalid_product_finder_brand(): void
     {
-        $service = new ResourceUpdateService;
+        $service = $this->service;
 
         $this->expectException(\InvalidArgumentException::class);
         $service->getAllowedFilename('filter-panel', 'product-finder', 'unknown-brand');
@@ -36,7 +52,8 @@ class ResourceServiceTest extends TestCase
 
     public function test_update_rejects_invalid_json(): void
     {
-        $service = new ResourceUpdateService;
+        $service = $this->service;
+        $this->purgeService->shouldNotReceive('purgeHub');
 
         $this->expectException(\InvalidArgumentException::class);
         $service->update('allbrands', 'combined-data', '', '{invalid json');
@@ -44,7 +61,8 @@ class ResourceServiceTest extends TestCase
 
     public function test_update_rejects_json_string(): void
     {
-        $service = new ResourceUpdateService;
+        $service = $this->service;
+        $this->purgeService->shouldNotReceive('purgeHub');
 
         $this->expectException(\InvalidArgumentException::class);
         $service->update('allbrands', 'combined-data', '', '"hello"');
@@ -57,8 +75,9 @@ class ResourceServiceTest extends TestCase
 
         try {
             Cache::put('allbrands', ['old' => 'data']);
+            $this->purgeService->shouldReceive('purgeHub')->once();
 
-            $service = new ResourceUpdateService;
+            $service = $this->service;
             $service->update('allbrands', 'combined-data', '', '{"test":"data"}');
 
             $this->assertSame(
@@ -70,6 +89,46 @@ class ResourceServiceTest extends TestCase
         } finally {
             $backup === null ? @unlink($path) : file_put_contents($path, $backup);
             Cache::forget('allbrands');
+        }
+    }
+
+    public function test_it_purges_the_hub_cache_after_a_successful_update(): void
+    {
+        $path = storage_path('app/private/combined-data/allpending.json');
+        $backup = file_exists($path) ? file_get_contents($path) : null;
+
+        try {
+            $this->purgeService->shouldReceive('purgeHub')->once();
+            Log::shouldReceive('error')->never();
+
+            $this->service->update('allpending', 'combined-data', '', '{"test":"data"}');
+        } finally {
+            $backup === null ? @unlink($path) : file_put_contents($path, $backup);
+            Cache::forget('allpending');
+        }
+    }
+
+    public function test_a_failed_hub_purge_is_logged_without_failing_the_update(): void
+    {
+        $path = storage_path('app/private/combined-data/allpending.json');
+        $backup = file_exists($path) ? file_get_contents($path) : null;
+
+        try {
+            $this->purgeService->shouldReceive('purgeHub')
+                ->once()
+                ->andThrow(new RuntimeException('Hub is down'));
+
+            Log::shouldReceive('error')->once()->with('Hub cache purge failed after resource update.', [
+                'resource' => 'allpending',
+                'error' => 'Hub is down',
+            ]);
+
+            $this->service->update('allpending', 'combined-data', '', '{"test":"data"}');
+
+            $this->assertSame('{"test":"data"}', file_get_contents($path));
+        } finally {
+            $backup === null ? @unlink($path) : file_put_contents($path, $backup);
+            Cache::forget('allpending');
         }
     }
 
@@ -86,7 +145,9 @@ class ResourceServiceTest extends TestCase
         }
 
         try {
-            $service = new ResourceUpdateService;
+            $this->purgeService->shouldReceive('purgeHub')->twice();
+
+            $service = $this->service;
             $service->update('filter-panel', 'product-finder', 'porcelaintiles', '{"brand":"porcelaintiles"}');
             $service->update('filter-panel', 'product-finder', 'tailormade', '{"brand":"tailormade"}');
 
