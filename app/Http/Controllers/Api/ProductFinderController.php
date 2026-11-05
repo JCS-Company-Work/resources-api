@@ -18,7 +18,7 @@ class ProductFinderController extends Controller
     {
 
         // Fetch filter panel data
-        $products = $dataService->getData('app/private/product-finder/porcelain-tiles/', 'filter-panel');
+        $products = $dataService->getData('app/private/product-finder/porcelaintiles/', 'filter-panel');
 
         return response()->json($products);
 
@@ -33,7 +33,7 @@ class ProductFinderController extends Controller
     {
 
         // Fetch product data from the data service
-        $products = $dataService->getData('app/private/product-finder/porcelain-tiles/', 'tile-filter-data');
+        $products = $dataService->getData('app/private/product-finder/porcelaintiles/', 'tile-filter-data');
 
         return response()->json($products);
 
@@ -48,7 +48,7 @@ class ProductFinderController extends Controller
     {
 
         // Fetch product reference data from the data service
-        $products = $dataService->getData('app/private/product-finder/porcelain-tiles/', 'tile-filter-ref-data');
+        $products = $dataService->getData('app/private/product-finder/porcelaintiles/', 'tile-filter-ref-data');
 
         return response()->json($products);
 
@@ -61,7 +61,7 @@ class ProductFinderController extends Controller
      */
     public function getAllProductFinderData(Request $request, DataService $dataService)
     {
-        $path = 'app/private/product-finder/porcelain-tiles/';
+        $path = 'app/private/product-finder/porcelaintiles/';
 
         return response()->json([
             'filterPanel' => $dataService->getData($path, 'filter-panel'),

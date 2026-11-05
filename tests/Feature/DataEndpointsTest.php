@@ -18,9 +18,9 @@ class DataEndpointsTest extends TestCase
             'pending products' => ['/api/pending', 'app/private/combined-data/', 'allpending', 'combined_data_api'],
             'florim uk' => ['/api/florimuk', 'app/private/florimuk/', 'florimuk', 'florimuk'],
             'sample request' => ['/api/sample-request/some-brand', 'app/private/samples-tool/', 'some-brand', 'samples_api'],
-            'product finder filter panel' => ['/api/product-finder/filter-panel', 'app/private/product-finder/porcelain-tiles/', 'filter-panel', 'product_finder_api'],
-            'product finder data' => ['/api/product-finder/product-data', 'app/private/product-finder/porcelain-tiles/', 'tile-filter-data', 'product_finder_api'],
-            'product finder ref data' => ['/api/product-finder/product-ref-data', 'app/private/product-finder/porcelain-tiles/', 'tile-filter-ref-data', 'product_finder_api'],
+            'product finder filter panel' => ['/api/product-finder/filter-panel', 'app/private/product-finder/porcelaintiles/', 'filter-panel', 'product_finder_api'],
+            'product finder data' => ['/api/product-finder/product-data', 'app/private/product-finder/porcelaintiles/', 'tile-filter-data', 'product_finder_api'],
+            'product finder ref data' => ['/api/product-finder/product-ref-data', 'app/private/product-finder/porcelaintiles/', 'tile-filter-ref-data', 'product_finder_api'],
             'tm colours filter panel' => ['/api/tm-colours/filter-panel', 'app/private/tailormade/', 'filter-panel', 'tm_colours_api'],
             'tm colours data' => ['/api/tm-colours/colour-data', 'app/private/tailormade/', 'tile-filter-data', 'tm_colours_api'],
             'tm colours ref data' => ['/api/tm-colours/colour-ref-data', 'app/private/tailormade/', 'tile-filter-ref-data', 'tm_colours_api'],
@@ -77,7 +77,7 @@ class DataEndpointsTest extends TestCase
 
     public function test_product_finder_all_combines_every_dataset(): void
     {
-        $path = 'app/private/product-finder/porcelain-tiles/';
+        $path = 'app/private/product-finder/porcelaintiles/';
         $datasets = [
             'filter-panel' => [['filter' => 'colour']],
             'tile-filter-data' => [['postID' => 1]],

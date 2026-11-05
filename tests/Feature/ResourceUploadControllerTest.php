@@ -75,11 +75,11 @@ class ResourceUploadControllerTest extends TestCase
     public function test_it_passes_the_product_finder_brand_to_the_service(): void
     {
         $this->mock(ResourceUpdateService::class, function ($mock) {
-            $mock->shouldReceive('update')->once()->with('filter-panel', 'product-finder', 'porcelain-tiles', '{"a":1}');
+            $mock->shouldReceive('update')->once()->with('filter-panel', 'product-finder', 'porcelaintiles', '{"a":1}');
         });
 
         $this->withApiToken('resource_api')
-            ->call('PUT', '/api/resources/product-finder/porcelain-tiles/filter-panel', [], [], [], $this->rawJsonServer(), '{"a":1}')
+            ->call('PUT', '/api/resources/product-finder/porcelaintiles/filter-panel', [], [], [], $this->rawJsonServer(), '{"a":1}')
             ->assertOk()
             ->assertJson(['message' => 'Resource updated successfully.']);
     }

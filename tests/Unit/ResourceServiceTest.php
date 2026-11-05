@@ -30,7 +30,7 @@ class ResourceServiceTest extends TestCase
 
         $this->assertSame('allbrands.json', $service->getAllowedFilename('allbrands', 'combined-data', ''));
         $this->assertSame('allpending.json', $service->getAllowedFilename('allpending', 'combined-data', ''));
-        $this->assertSame('filter-panel.json', $service->getAllowedFilename('filter-panel', 'product-finder', 'porcelain-tiles'));
+        $this->assertSame('filter-panel.json', $service->getAllowedFilename('filter-panel', 'product-finder', 'porcelaintiles'));
         $this->assertSame('filter-panel.json', $service->getAllowedFilename('filter-panel', 'product-finder', 'tailormade'));
     }
 
@@ -135,7 +135,7 @@ class ResourceServiceTest extends TestCase
     public function test_it_updates_the_product_finder_file_for_the_selected_brand(): void
     {
         $paths = [
-            'porcelain-tiles' => storage_path('app/private/product-finder/porcelain-tiles/filter-panel.json'),
+            'porcelaintiles' => storage_path('app/private/product-finder/porcelaintiles/filter-panel.json'),
             'tailormade' => storage_path('app/private/product-finder/tailormade/filter-panel.json'),
         ];
         $backups = [];
@@ -148,10 +148,10 @@ class ResourceServiceTest extends TestCase
             $this->purgeService->shouldReceive('purgeHub')->twice();
 
             $service = $this->service;
-            $service->update('filter-panel', 'product-finder', 'porcelain-tiles', '{"brand":"porcelain-tiles"}');
+            $service->update('filter-panel', 'product-finder', 'porcelaintiles', '{"brand":"porcelaintiles"}');
             $service->update('filter-panel', 'product-finder', 'tailormade', '{"brand":"tailormade"}');
 
-            $this->assertSame('{"brand":"porcelain-tiles"}', file_get_contents($paths['porcelain-tiles']));
+            $this->assertSame('{"brand":"porcelaintiles"}', file_get_contents($paths['porcelaintiles']));
             $this->assertSame('{"brand":"tailormade"}', file_get_contents($paths['tailormade']));
         } finally {
             foreach ($paths as $brand => $path) {

@@ -77,31 +77,31 @@ class ResourceUpdateService
             ],
         ],
         'product-finder' => [
-            'porcelain-tiles' => [
+            'porcelaintiles' => [
                 'filter-panel' => [
-                    'filepath' => 'app/private/product-finder/porcelain-tiles',
+                    'filepath' => 'app/private/product-finder/porcelaintiles/',
                     'filename' => 'filter-panel.json',
                 ],
                 'tile-filter-data' => [
-                    'filepath' => 'app/private/product-finder/porcelain-tiles',
+                    'filepath' => 'app/private/product-finder/porcelaintiles/',
                     'filename' => 'tile-filter-data.json',
                 ],
                 'tile-filter-ref-data' => [
-                    'filepath' => 'app/private/product-finder/porcelain-tiles',
+                    'filepath' => 'app/private/product-finder/porcelaintiles/',
                     'filename' => 'tile-filter-ref-data.json',
                 ],
             ],
             'tailormade' => [
                 'filter-panel' => [
-                    'filepath' => 'app/private/product-finder/tailormade',
+                    'filepath' => 'app/private/product-finder/tailormade/',
                     'filename' => 'filter-panel.json',
                 ],
                 'tile-filter-data' => [
-                    'filepath' => 'app/private/product-finder/tailormade',
+                    'filepath' => 'app/private/product-finder/tailormade/',
                     'filename' => 'tile-filter-data.json',
                 ],
                 'tile-filter-ref-data' => [
-                    'filepath' => 'app/private/product-finder/tailormade',
+                    'filepath' => 'app/private/product-finder/tailormade/',
                     'filename' => 'tile-filter-ref-data.json',
                 ],
             ],
@@ -125,7 +125,7 @@ class ResourceUpdateService
      * Get the allowed filename for the specified resource.
      *
      * @param  string  $resource  The resource name (e.g., 'filter-panel', 'tile-filter-data').
-     * @param  string  $type  The type of the resource (e.g., 'porcelain-tiles', 'tailormade').
+     * @param  string  $type  The type of the resource (e.g., 'porcelaintiles', 'tailormade').
      */
     public function getAllowedFilename(string $resource, string $type, string $brand): string
     {
@@ -155,7 +155,7 @@ class ResourceUpdateService
      * Update the specified resource with the provided content.
      *
      * @param  string  $resource  The resource name (e.g., 'filter-panel', 'tile-filter-data').
-     * @param  string  $type  The type of the resource (e.g., 'porcelain-tiles', 'tailormade').
+     * @param  string  $type  The type of the resource (e.g., 'porcelaintiles', 'tailormade').
      * @param  string  $brand  The brand associated with the resource.
      * @param  string  $content  The JSON content to update the resource with.
      */
