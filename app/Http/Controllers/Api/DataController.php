@@ -99,7 +99,7 @@ class DataController extends Controller
         // Fetch Florim UK data from the data service
         $florimData = $dataService->getData('app/private/florimuk/', 'florimuk');
 
-        return response()->json(array_values($florimData));
+        return response()->json($florimData);
     }
 
     /**
