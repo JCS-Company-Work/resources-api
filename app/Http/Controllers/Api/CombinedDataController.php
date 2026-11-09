@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\DataService;
+use App\Services\GoogleSheets\GoogleSheetsService;
+use App\Services\GoogleSheets\Resources\CombinedDataService;
+use App\Services\GoogleSheets\Resources\ResourceSaveService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 
-class DataController extends Controller
+class CombinedDataController extends Controller
 {
     /**
      * Get all products
@@ -88,35 +92,6 @@ class DataController extends Controller
         return response()->json($range);
     }
 
-    /**
-     * Get Florim UK data
-     *
-     * @return JsonResponse
-     */
-    public function getFlorimData(DataService $dataService)
-    {
-
-        // Fetch Florim UK data from the data service
-        $florimData = $dataService->getData('app/private/florimuk/', 'florimuk');
-
-        return response()->json($florimData);
-    }
-
-    /**
-     * Get sample request data for a specific brand
-     *
-     * @param  string  $brand
-     * @return JsonResponse
-     */
-    public function getSampleRequestData($brand, DataService $dataService)
-    {
-
-        // Fetch sample request data for the specified brand from the data service
-        $sampleRequestData = $dataService->getData('app/private/samples-tool/', $brand);
-
-        return response()->json($sampleRequestData);
-    }
-
     public function getPtSiteTemplates(DataService $dataService)
     {
 
@@ -142,5 +117,36 @@ class DataController extends Controller
             ->values();
 
         return response()->json($templates);
+    }
+
+    /**
+     * Update combined data for a specific filename
+     */
+    public function update(
+        string $filename,
+        GoogleSheetsService $googleSheetsService,
+        CombinedDataService $combinedDataService,
+        ResourceSaveService $resourceSaveService
+    ): JsonResponse {
+        if (! in_array($filename, ['allbrands', 'allpending'], true)) {
+            return response()->json([
+                'message' => 'Unsupported combined data resource.',
+            ], 422);
+        }
+
+        // Fetch combined data from the Google Sheets service
+        $rows = $googleSheetsService->getRows();
+
+        // Create final combined data using the combined data service
+        $combinedData = $combinedDataService->createCombinedData($filename, $rows);
+
+        // Save file in private storage using the ResourceSaveService
+        $resourceSavePath = 'app/private/combined-data/';
+        $resourceSaveService->saveResource($filename.'.json', $resourceSavePath, $combinedData);
+
+        $filePath = 'combined-data/'.$filename.'.json';
+        $isStored = Storage::disk('local')->exists($filePath);
+
+        return response()->json(['success' => $isStored, 'filename' => $filename, 'filePath' => $filePath]);
     }
 }

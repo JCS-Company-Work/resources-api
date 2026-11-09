@@ -47,5 +47,11 @@ return [
         'url' => env('HUB_CACHE_PURGE_URL'),
         'token' => env('HUB_CACHE_PURGE_TOKEN'),
     ],
+    'google_sheets' => [
+        'application_name' => env('GOOGLE_SHEETS_APPLICATION_NAME'),
+        'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID'),
+        'range' => env('GOOGLE_SHEETS_RANGE'),
+        'credentials' => storage_path('app/'.env('GOOGLE_SHEETS_CREDENTIALS')),
+    ],
 
 ];

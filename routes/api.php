@@ -1,8 +1,10 @@
 <?php
 
-use App\Http\Controllers\Api\DataController;
+use App\Http\Controllers\Api\CombinedDataController;
+use App\Http\Controllers\Api\FlorimDataController;
 use App\Http\Controllers\Api\ProductFinderController;
 use App\Http\Controllers\Api\ResourceUploadController;
+use App\Http\Controllers\Api\SampleRequestController;
 use App\Http\Controllers\Api\TMColoursController;
 use App\Http\Middleware\VerifyApiToken;
 use Illuminate\Http\Request;
@@ -14,16 +16,17 @@ Route::get('/user', function (Request $request) {
 
 // Main PT sheet data routes
 Route::middleware(VerifyApiToken::using('combined_data_api'))->group(function () {
-    Route::get('/products', [DataController::class, 'getAllProducts']);
-    Route::get('/products/{id}', [DataController::class, 'getSingleProduct']);
-    Route::get('/ranges/{id}', [DataController::class, 'getSingleRange']);
-    Route::get('/pending', [DataController::class, 'getPendingProducts']);
-    Route::get('/ptsitetemplates', [DataController::class, 'getPtSiteTemplates']);
+    Route::get('/products', [CombinedDataController::class, 'getAllProducts']);
+    Route::get('/products/{id}', [CombinedDataController::class, 'getSingleProduct']);
+    Route::get('/ranges/{id}', [CombinedDataController::class, 'getSingleRange']);
+    Route::get('/pending', [CombinedDataController::class, 'getPendingProducts']);
+    Route::get('/ptsitetemplates', [CombinedDataController::class, 'getPtSiteTemplates']);
+    Route::put('/resources/combined-data/{filename}', [CombinedDataController::class, 'update']);
 });
 
 // Florim UK routes
 Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
-    Route::get('/florimuk', [DataController::class, 'getFlorimData']);
+    Route::get('/florimuk', [FlorimDataController::class, 'getFlorimData']);
 });
 
 // File upload resource routes
@@ -53,5 +56,5 @@ Route::middleware(VerifyApiToken::using('tm_colours_api'))
     });
 
 // Sample request tool routes
-Route::get('/sample-request/{brand}', [DataController::class, 'getSampleRequestData'])
+Route::get('/sample-request/{brand}', [SampleRequestController::class, 'getSampleRequestData'])
     ->middleware(VerifyApiToken::using('samples_api'));
