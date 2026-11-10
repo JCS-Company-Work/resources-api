@@ -3,19 +3,16 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
-class DataService
+class GetDataService
 {
-
     /**
      * Get data from the cache or JSON file based on the filename
      *
-     * @param string $filename The name of the JSON file (without the .json extension)
-     * @param string $filepath The path to the JSON file (optional, defaults to storage/app/private/)
-     * @return array
+     * @param  string  $filename  The name of the JSON file (without the .json extension)
+     * @param  string  $filepath  The path to the JSON file (relative to the storage path)
      */
-    public function getData(string $filepath = 'app/private/', string $filename): array
+    public function getData(string $filepath, string $filename): array
     {
 
         // Attempt to retrieve the products from the cache first
@@ -27,7 +24,7 @@ class DataService
             function () use ($filename, $filepath) {
 
                 // Read the products from the JSON file if not found in the cache
-                $path = storage_path($filepath . $filename . '.json');
+                $path = storage_path($filepath.$filename.'.json');
 
                 // Ensure the JSON file exists before attempting to read it
                 return json_decode(

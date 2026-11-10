@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\DataService;
+use App\Services\GetDataService;
 use App\Services\GoogleSheets\GoogleSheetsService;
-use App\Services\GoogleSheets\Resources\CombinedDataService;
-use App\Services\GoogleSheets\Resources\ResourceSaveService;
+use App\Services\Resources\CombinedDataService;
+use App\Services\Resources\ResourceSaveService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +18,7 @@ class CombinedDataController extends Controller
      *
      * @return JsonResponse
      */
-    public function getAllProducts(DataService $dataService)
+    public function getAllProducts(GetDataService $dataService)
     {
 
         // Fetch all products from the data service
@@ -32,7 +32,7 @@ class CombinedDataController extends Controller
      *
      * @return JsonResponse
      */
-    public function getPendingProducts(DataService $dataService)
+    public function getPendingProducts(GetDataService $dataService)
     {
 
         // Fetch all products from the data service
@@ -48,7 +48,7 @@ class CombinedDataController extends Controller
      * @param  int  $id
      * @return JsonResponse
      */
-    public function getSingleProduct($id, DataService $dataService)
+    public function getSingleProduct($id, GetDataService $dataService)
     {
 
         // Fetch all products from the data service
@@ -73,7 +73,7 @@ class CombinedDataController extends Controller
      * @param  int  $id
      * @return JsonResponse
      */
-    public function getSingleRange($id, DataService $dataService)
+    public function getSingleRange($id, GetDataService $dataService)
     {
 
         // Fetch all ranges from the data service
@@ -92,7 +92,7 @@ class CombinedDataController extends Controller
         return response()->json($range);
     }
 
-    public function getPtSiteTemplates(DataService $dataService)
+    public function getPtSiteTemplates(GetDataService $dataService)
     {
 
         // Fetch PT site templates from the data service

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\DataService;
+use App\Services\GetDataService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +14,7 @@ class ProductFinderController extends Controller
      *
      * @return JsonResponse
      */
-    public function getProductFinderFilterPanel(Request $request, DataService $dataService)
+    public function getProductFinderFilterPanel(Request $request, GetDataService $dataService)
     {
 
         // Fetch filter panel data
@@ -29,7 +29,7 @@ class ProductFinderController extends Controller
      *
      * @return JsonResponse
      */
-    public function getProductFinderData(Request $request, DataService $dataService)
+    public function getProductFinderData(Request $request, GetDataService $dataService)
     {
 
         // Fetch product data from the data service
@@ -44,7 +44,7 @@ class ProductFinderController extends Controller
      *
      * @return JsonResponse
      */
-    public function getProductFinderRefData(Request $request, DataService $dataService)
+    public function getProductFinderRefData(Request $request, GetDataService $dataService)
     {
 
         // Fetch product reference data from the data service
@@ -59,7 +59,7 @@ class ProductFinderController extends Controller
      *
      * @return JsonResponse
      */
-    public function getAllProductFinderData(Request $request, DataService $dataService)
+    public function getAllProductFinderData(Request $request, GetDataService $dataService)
     {
         $path = 'app/private/product-finder/porcelaintiles/';
 

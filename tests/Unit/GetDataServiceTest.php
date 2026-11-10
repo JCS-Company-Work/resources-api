@@ -2,10 +2,10 @@
 
 namespace Tests\Unit;
 
-use App\Services\DataService;
+use App\Services\GetDataService;
 use Tests\TestCase;
 
-class DataServiceTest extends TestCase
+class GetDataServiceTest extends TestCase
 {
     public function test_data_is_cached_between_calls(): void
     {
@@ -15,7 +15,7 @@ class DataServiceTest extends TestCase
         file_put_contents($path, '{"version":1}');
 
         try {
-            $service = new DataService;
+            $service = new GetDataService;
 
             $firstResult = $service->getData('framework/testing/', 'data-service-test');
 
@@ -36,7 +36,7 @@ class DataServiceTest extends TestCase
 
         $this->expectException(\ErrorException::class);
 
-        (new DataService)->getData('framework/testing/', 'does-not-exist');
+        (new GetDataService)->getData('framework/testing/', 'does-not-exist');
     }
 
     public function test_it_throws_when_the_data_file_contains_invalid_json(): void
@@ -49,7 +49,7 @@ class DataServiceTest extends TestCase
         try {
             $this->expectException(\JsonException::class);
 
-            (new DataService)->getData('framework/testing/', 'data-service-invalid');
+            (new GetDataService)->getData('framework/testing/', 'data-service-invalid');
         } finally {
             @unlink($path);
         }

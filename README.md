@@ -1,58 +1,113 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Resources API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel API that serves JSON resources for the product catalogue, sample request tool, product finder, and TM Colours. Resources are read from private storage and cached; the combined-data update endpoint can regenerate its files from Google Sheets.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3+
+- Composer
+- A Google service-account credentials JSON file for combined-data generation
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Local setup
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Set the environment variables listed below in `.env`. For Google Sheets access, place the credentials file under `storage/app/` and set `GOOGLE_SHEETS_CREDENTIALS` to its relative path. The service account needs read access to the configured spreadsheet.
 
-## Contributing
+Start the API:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+php artisan serve
+```
 
-## Code of Conduct
+API routes are served under `/api`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Configuration
 
-## Security Vulnerabilities
+Configure a distinct token for each API client:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Environment variable | Used by |
+| --- | --- |
+| `COMBINED_DATA_API_TOKEN` | Combined-data reads and generation |
+| `FLORIMUK_API_TOKEN` | Florim UK data |
+| `SAMPLES_API_TOKEN` | Sample request data |
+| `PRODUCT_FINDER_API_TOKEN` | Product Finder data |
+| `TM_COLOURS_API_TOKEN` | TM Colours data |
+| `RESOURCE_API_TOKEN` | Legacy JSON resource upload endpoints |
 
-## License
+Send tokens in the `X-API-Token` request header.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Combined-data generation also requires:
+
+| Environment variable | Purpose |
+| --- | --- |
+| `GOOGLE_SHEETS_APPLICATION_NAME` | Google API client application name |
+| `GOOGLE_SHEETS_SPREADSHEET_ID` | Source spreadsheet ID |
+| `GOOGLE_SHEETS_RANGE` | Sheet range to read |
+| `GOOGLE_SHEETS_CREDENTIALS` | Credentials JSON path relative to `storage/app/` |
+
+The optional `HUB_CACHE_PURGE_URL` and `HUB_CACHE_PURGE_TOKEN` configure the Hub cache purge integration.
+
+## API endpoints
+
+Data and resource routes require the corresponding token shown below. `GET /api/user` is the exception; it uses Sanctum authentication.
+
+### Combined data
+
+Uses `COMBINED_DATA_API_TOKEN`.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/products` | All products |
+| `GET` | `/api/products/{id}` | Product by post ID |
+| `GET` | `/api/ranges/{id}` | Products in a range |
+| `GET` | `/api/pending` | Pending products |
+| `GET` | `/api/ptsitetemplates` | Product data with hidden fields excluded |
+| `PUT` | `/api/resources/combined-data/{filename}` | Generate and save `allbrands` or `allpending` from Google Sheets |
+
+The generation endpoint takes no JSON body. For example:
+
+```bash
+curl -X PUT http://localhost:8000/api/resources/combined-data/allbrands \
+  -H 'X-API-Token: YOUR_COMBINED_DATA_API_TOKEN'
+```
+
+Generated files are stored under `storage/app/private/combined-data/`.
+
+### Other data endpoints
+
+| Method | Path | Token |
+| --- | --- | --- |
+| `GET` | `/api/florimuk` | `FLORIMUK_API_TOKEN` |
+| `GET` | `/api/sample-request/{brand}` | `SAMPLES_API_TOKEN` |
+| `GET` | `/api/product-finder/all` | `PRODUCT_FINDER_API_TOKEN` |
+| `GET` | `/api/product-finder/filter-panel` | `PRODUCT_FINDER_API_TOKEN` |
+| `GET` | `/api/product-finder/product-data` | `PRODUCT_FINDER_API_TOKEN` |
+| `GET` | `/api/product-finder/product-ref-data` | `PRODUCT_FINDER_API_TOKEN` |
+| `GET` | `/api/tm-colours/filter-panel` | `TM_COLOURS_API_TOKEN` |
+| `GET` | `/api/tm-colours/colour-data` | `TM_COLOURS_API_TOKEN` |
+| `GET` | `/api/tm-colours/colour-ref-data` | `TM_COLOURS_API_TOKEN` |
+
+### Legacy resource uploads
+
+The JSON upload endpoints remain available during migration to generated resources. They accept JSON request bodies and use `RESOURCE_API_TOKEN`:
+
+- `PUT /api/resources/{type}/{filename}`
+- `PUT /api/resources/product-finder/{brand}/{filename}`
+
+## Resource files and caching
+
+JSON resources are stored in private local storage, under `storage/app/private/`. Reads are cached for 30 days. Resource generation clears the matching resource cache after writing the new file.
+
+## Tests
+
+Run the test suite with:
+
+```bash
+php artisan test --compact
+```

@@ -2,8 +2,8 @@
 
 namespace Tests\Unit;
 
-use App\Services\GoogleSheets\Resources\ResourceSaveService;
 use App\Services\LiteSpeedPurgeService;
+use App\Services\Resources\ResourceSaveService;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 

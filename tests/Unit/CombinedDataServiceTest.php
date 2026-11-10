@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\GoogleSheets\Resources\CombinedDataService;
+use App\Services\Resources\CombinedDataService;
 use PHPUnit\Framework\TestCase;
 
 class CombinedDataServiceTest extends TestCase

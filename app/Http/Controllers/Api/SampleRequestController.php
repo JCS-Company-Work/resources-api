@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\DataService;
+use App\Services\GetDataService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -15,7 +15,7 @@ class SampleRequestController extends Controller
      * @param  string  $brand
      * @return JsonResponse
      */
-    public function getSampleRequestData($brand, DataService $dataService)
+    public function getSampleRequestData($brand, GetDataService $dataService)
     {
 
         // Fetch sample request data for the specified brand from the data service

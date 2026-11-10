@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\GoogleSheets\Resources;
+namespace App\Services\Resources;
 
 class CombinedDataService
 {

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\DataService;
+use App\Services\GetDataService;
 use Tests\TestCase;
 
 class ProductApiTest extends TestCase
@@ -11,7 +11,7 @@ class ProductApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->mock(DataService::class, function ($mock) {
+        $this->mock(GetDataService::class, function ($mock) {
             $mock->shouldReceive('getData')
                 ->with('app/private/combined-data/', 'allbrands')
                 ->andReturn([

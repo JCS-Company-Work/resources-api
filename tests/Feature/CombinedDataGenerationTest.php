@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Services\GoogleSheets\GoogleSheetsService;
 use App\Services\LiteSpeedPurgeService;
+use App\Services\Resources\CombinedDataService;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 
@@ -69,6 +70,9 @@ class CombinedDataGenerationTest extends TestCase
         try {
             $this->mock(GoogleSheetsService::class, function ($mock) {
                 $mock->shouldNotReceive('getRows');
+            });
+            $this->mock(CombinedDataService::class, function ($mock) {
+                $mock->shouldNotReceive('createCombinedData');
             });
 
             $this->withApiToken('combined_data_api')

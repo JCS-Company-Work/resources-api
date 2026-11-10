@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\DataService;
+use App\Services\GetDataService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,7 +14,7 @@ class TMColoursController extends Controller
      *
      * @return JsonResponse
      */
-    public function getTmColoursFilterPanel(Request $request, DataService $dataService)
+    public function getTmColoursFilterPanel(Request $request, GetDataService $dataService)
     {
 
         // Fetch filter panel data
@@ -29,7 +29,7 @@ class TMColoursController extends Controller
      *
      * @return JsonResponse
      */
-    public function getTmColoursData(Request $request, DataService $dataService)
+    public function getTmColoursData(Request $request, GetDataService $dataService)
     {
 
         // Fetch product data from the data service
@@ -44,7 +44,7 @@ class TMColoursController extends Controller
      *
      * @return JsonResponse
      */
-    public function getTmColoursRefData(Request $request, DataService $dataService)
+    public function getTmColoursRefData(Request $request, GetDataService $dataService)
     {
 
         // Fetch product reference data from the data service

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\DataService;
+use App\Services\GetDataService;
 use Illuminate\Http\JsonResponse;
 
 class FlorimDataController extends Controller
@@ -13,7 +13,7 @@ class FlorimDataController extends Controller
      *
      * @return JsonResponse
      */
-    public function getFlorimData(DataService $dataService)
+    public function getFlorimData(GetDataService $dataService)
     {
 
         // Fetch Florim UK data from the data service

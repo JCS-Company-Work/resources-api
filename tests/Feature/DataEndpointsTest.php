@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Services\DataService;
+use App\Services\GetDataService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -40,7 +40,7 @@ class DataEndpointsTest extends TestCase
     {
         $payload = [['id' => 1, 'name' => 'Example']];
 
-        $this->mock(DataService::class, function ($mock) use ($path, $file, $payload) {
+        $this->mock(GetDataService::class, function ($mock) use ($path, $file, $payload) {
             $mock->shouldReceive('getData')->once()->with($path, $file)->andReturn($payload);
         });
 
@@ -62,7 +62,7 @@ class DataEndpointsTest extends TestCase
             ['postID' => 2, 'productCode' => 'B2', ...array_fill_keys($hidden, 'secret')],
         ];
 
-        $this->mock(DataService::class, function ($mock) use ($items) {
+        $this->mock(GetDataService::class, function ($mock) use ($items) {
             $mock->shouldReceive('getData')->once()->with('app/private/combined-data/', 'allbrands')->andReturn($items);
         });
 
@@ -84,7 +84,7 @@ class DataEndpointsTest extends TestCase
             'tile-filter-ref-data' => [['ref' => 'A']],
         ];
 
-        $this->mock(DataService::class, function ($mock) use ($path, $datasets) {
+        $this->mock(GetDataService::class, function ($mock) use ($path, $datasets) {
             foreach ($datasets as $file => $data) {
                 $mock->shouldReceive('getData')->once()->with($path, $file)->andReturn($data);
             }
