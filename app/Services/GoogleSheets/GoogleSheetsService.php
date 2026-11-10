@@ -4,6 +4,7 @@ namespace App\Services\GoogleSheets;
 
 use Google\Client;
 use Google\Service\Sheets;
+use RuntimeException;
 
 class GoogleSheetsService
 {
@@ -21,11 +22,32 @@ class GoogleSheetsService
             Sheets::SPREADSHEETS_READONLY,
         ]);
 
-        $client->setAuthConfig(
-            config('services.google_sheets.credentials')
-        );
+        $client->setAuthConfig($this->resolveCredentialsPath());
 
         $this->service = new Sheets($client);
+    }
+
+    /**
+     * Get the credentials file path, failing with a clear reason if it is unusable
+     */
+    protected function resolveCredentialsPath(): string
+    {
+        $path = (string) config('services.google_sheets.credentials');
+
+        if (is_dir($path)) {
+            throw new RuntimeException(
+                "Google Sheets credentials path [{$path}] is a directory. "
+                .'GOOGLE_SHEETS_CREDENTIALS is probably missing from .env, or config is cached (clear bootstrap/cache/config.php).'
+            );
+        }
+
+        if (! is_file($path) || ! is_readable($path)) {
+            throw new RuntimeException(
+                "Google Sheets credentials file [{$path}] does not exist or is not readable."
+            );
+        }
+
+        return $path;
     }
 
     /**
