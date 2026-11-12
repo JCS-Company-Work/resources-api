@@ -81,6 +81,48 @@ test('it separates special pieces and collapses bookmatch blocks into one entry'
         ]]);
 });
 
+test('it keeps a mosaic out of regular sizes when the finish has standard sizes', function () {
+    $result = (new SampleRequestFormatterService)->formatBrand('pt', [
+        ptTile(['thickness' => '9', 'size' => '1200 x 1200 x 9']),
+        ptTile([
+            'thickness' => '9',
+            'size' => '300 x 300 x 9',
+            'specialPiece' => 'Mosaic (48x48mm)',
+        ]),
+    ]);
+
+    $finish = $result['Marble Slabs']['Cinder-52712']['Finishes']['Natural-R10'];
+
+    expect($finish['Size'])->toBe(['9mm' => ['1200 x 1200 x 9']])
+        ->and($finish['Special_Size'])->toBe([
+            '9mm' => ['Mosaic (48x48mm)' => ['300 x 300 x 9']],
+        ])
+        ->and($finish['Sample_Options_Standard'])->toBe([
+            '9mm' => ['Natural-R10 (9mm)'],
+        ])
+        ->and($finish['Sample_Options_Special'])->toBe([
+            '9mm' => [
+                'Mosaic (48x48mm)' => ['Natural-R10 (9mm) - Mosaic (48x48mm)'],
+            ],
+        ]);
+});
+
+test('it removes duplicate sizes from a finish', function () {
+    $result = (new SampleRequestFormatterService)->formatBrand('pt', [
+        ptTile(['size' => '1200 x 1200 x 9']),
+        ptTile(['size' => '1200 x 1200 x 9']),
+    ]);
+
+    expect($result['Marble Slabs']['Cinder-52712']['Finishes']['Natural-R10']['Size'])
+        ->toBe(['9-5mm' => ['1200 x 1200 x 9']]);
+});
+
+test('it does not add platform plus metadata to pt tiles', function () {
+    $result = (new SampleRequestFormatterService)->formatBrand('pt', [ptTile()]);
+
+    expect($result['Marble Slabs']['Cinder-52712'])->not->toHaveKey('additional_data');
+});
+
 test('it returns nothing for an unknown brand', function () {
     expect((new SampleRequestFormatterService)->formatBrand('unknown', [ptTile()]))->toBe([]);
 });

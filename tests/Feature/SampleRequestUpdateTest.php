@@ -50,11 +50,13 @@ test('it formats and saves the sample request file for a brand', function () {
             ->assertJson(['success' => true, 'filename' => 'pt.json']);
 
         $saved = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+        $savedColour = $saved['Marble Slabs']['Cinder-52712'];
 
         expect(array_keys($saved['Marble Slabs']))->toBe(['Cinder-52712'])
-            ->and($saved['Marble Slabs']['Cinder-52712']['Finishes']['Polished']['Picklist_Location'])
+            ->and($savedColour)->not->toHaveKey('additional_data')
+            ->and($savedColour['Finishes']['Polished']['Picklist_Location'])
             ->toBe(['Polished-12mm' => 'A1'])
-            ->and($saved['Marble Slabs']['Cinder-52712']['attributes']['classesString'])
+            ->and($savedColour['attributes']['classesString'])
             ->toBe('cinder marble-slabs collection-394 thickness-12 format-320-x-160 brand-florim polished 52712 brown');
     } finally {
         $backup === null ? @unlink($path) : file_put_contents($path, $backup);
