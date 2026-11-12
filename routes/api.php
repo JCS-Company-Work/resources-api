@@ -56,5 +56,9 @@ Route::middleware(VerifyApiToken::using('tm_colours_api'))
     });
 
 // Sample request tool routes
-Route::get('/sample-request/{brand}', [SampleRequestController::class, 'getSampleRequestData'])
-    ->middleware(VerifyApiToken::using('samples_api'));
+Route::middleware(VerifyApiToken::using('samples_api'))
+    ->prefix('sample-request')
+    ->group(function () {
+        Route::get('/{brand}', [SampleRequestController::class, 'getSampleRequestData']);
+        Route::put('/{brand}', [SampleRequestController::class, 'updateSampleRequestData']);
+    });

@@ -51,6 +51,8 @@ return [
         'application_name' => env('GOOGLE_SHEETS_APPLICATION_NAME'),
         'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID'),
         'range' => env('GOOGLE_SHEETS_RANGE'),
+        'attributes_range' => env('GOOGLE_SHEETS_ATTRIBUTES_RANGE'),
+        'locations_range' => env('GOOGLE_SHEETS_LOCATIONS_RANGE'),
         'credentials' => storage_path('app/'.env('GOOGLE_SHEETS_CREDENTIALS')),
     ],
 

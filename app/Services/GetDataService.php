@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class GetDataService
 {
@@ -25,7 +26,7 @@ class GetDataService
 
                 // Read the products from the JSON file if not found in the cache
                 $path = storage_path($filepath.$filename.'.json');
-
+Log::info("Reading JSON file from path: $path");
                 // Ensure the JSON file exists before attempting to read it
                 return json_decode(
                     file_get_contents($path),

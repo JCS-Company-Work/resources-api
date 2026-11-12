@@ -144,6 +144,7 @@ class CombinedDataController extends Controller
         $resourceSavePath = 'app/private/combined-data/';
         $resourceSaveService->saveResource($filename.'.json', $resourceSavePath, $combinedData);
 
+        // Check if the file exists in storage
         $filePath = 'combined-data/'.$filename.'.json';
         $isStored = Storage::disk('local')->exists($filePath);
 
