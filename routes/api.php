@@ -40,6 +40,7 @@ Route::middleware(VerifyApiToken::using('resource_api'))
 Route::middleware(VerifyApiToken::using('product_finder_api'))
     ->prefix('product-finder')
     ->group(function () {
+        Route::put('/{brand}', [ProductFinderController::class, 'update']);
         Route::get('/all', [ProductFinderController::class, 'getAllProductFinderData']);
         Route::get('/filter-panel', [ProductFinderController::class, 'getProductFinderFilterPanel']);
         Route::get('/product-data', [ProductFinderController::class, 'getProductFinderData']);

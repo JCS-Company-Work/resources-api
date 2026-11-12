@@ -4,8 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\GetDataService;
+use App\Services\GoogleSheets\GoogleSheetsService;
+use App\Services\Resources\ProductFinderDataService;
+use App\Services\Resources\ResourceSaveService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductFinderController extends Controller
 {
@@ -67,6 +71,41 @@ class ProductFinderController extends Controller
             'filterPanel' => $dataService->getData($path, 'filter-panel'),
             'productData' => $dataService->getData($path, 'tile-filter-data'),
             'productRefData' => $dataService->getData($path, 'tile-filter-ref-data'),
+        ]);
+    }
+
+    /**
+     * Generate and save all product finder resources for a brand.
+     */
+    public function update(
+        string $brand,
+        GoogleSheetsService $googleSheetsService,
+        ProductFinderDataService $productFinderDataService,
+        ResourceSaveService $resourceSaveService
+    ): JsonResponse {
+        if (! $productFinderDataService->supports($brand)) {
+            return response()->json([
+                'message' => "Unsupported product finder brand [{$brand}].",
+            ], 422);
+        }
+
+        $resources = $productFinderDataService->generate(
+            $brand,
+            $googleSheetsService->getRows()
+        );
+
+        $resourcePath = "app/private/product-finder/{$brand}/";
+        $stored = [];
+
+        foreach ($resources as $filename => $data) {
+            $resourceSaveService->saveResource($filename.'.json', $resourcePath, $data);
+            $stored[$filename] = Storage::disk('local')->exists("product-finder/{$brand}/{$filename}.json");
+        }
+
+        return response()->json([
+            'success' => ! in_array(false, $stored, true),
+            'brand' => $brand,
+            'resources' => $stored,
         ]);
     }
 }
