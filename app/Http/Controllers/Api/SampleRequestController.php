@@ -46,7 +46,10 @@ class SampleRequestController extends Controller
 
         // Select the tiles for this brand, then format them for the samples tool
         $brandTiles = $dataService->createSampleRequestData($brand, $rows);
-        $sampleRequestData = $formatter->formatBrand($brand, $brandTiles);
+        $formattedBrand = $formatter->formatBrand($brand, $brandTiles);
+        $sampleRequestData = in_array($brand, ['pp', 'tm'], true)
+            ? ($formattedBrand[$brand] ?? [])
+            : $formattedBrand;
 
         // Save the updated data using the resource save service
         $resourceSavePath = 'app/private/samples-tool/';

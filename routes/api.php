@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CombinedDataController;
 use App\Http\Controllers\Api\FlorimDataController;
 use App\Http\Controllers\Api\ProductFinderController;
+use App\Http\Controllers\Api\RefreshAllResourcesController;
 use App\Http\Controllers\Api\ResourceUploadController;
 use App\Http\Controllers\Api\SampleRequestController;
 use App\Http\Controllers\Api\TMColoursController;
@@ -23,6 +24,9 @@ Route::middleware(VerifyApiToken::using('combined_data_api'))->group(function ()
     Route::get('/ptsitetemplates', [CombinedDataController::class, 'getPtSiteTemplates']);
     Route::put('/resources/combined-data/{filename}', [CombinedDataController::class, 'update']);
 });
+
+Route::put('/resources/refresh-all', RefreshAllResourcesController::class)
+    ->middleware(VerifyApiToken::using('resource_api'));
 
 // Florim UK routes
 Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {

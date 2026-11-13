@@ -50,16 +50,20 @@ class ProductFinderDataService
     private function filterTiles(string $brand, array $rows): array
     {
         $allowedAppearsOn = self::BRANDS[$brand]['appearsOn'];
+        $tiles = [];
 
-        return array_values(array_filter(
-            array_map(fn (array $row): array => $this->normaliseRow($row, $brand), $rows),
-            function (array $tile) use ($allowedAppearsOn): bool {
-                return in_array(strtolower($tile['Appears_On']), $allowedAppearsOn, true)
-                    && strtolower($tile['Pending_Item']) !== 'yes'
-                    && ! empty($tile['Post_ID'])
-                    && ! str_contains(strtolower($tile['Note']), 'discontinued by us');
+        foreach ($rows as $row) {
+            if (! in_array(strtolower((string) ($row['appearsOn'] ?? $row['Appears_On'] ?? '')), $allowedAppearsOn, true)
+                || strtolower((string) ($row['pendingItem'] ?? $row['Pending_Item'] ?? '')) === 'yes'
+                || empty($row['postID'] ?? $row['Post_ID'] ?? '')
+                || str_contains(strtolower((string) ($row['note'] ?? $row['Note'] ?? '')), 'discontinued by us')) {
+                continue;
             }
-        ));
+
+            $tiles[] = $this->normaliseRow($row, $brand);
+        }
+
+        return $tiles;
     }
 
     /**
@@ -96,17 +100,19 @@ class ProductFinderDataService
             'productCode' => 'Product_Code',
         ];
 
+        $normalised = [];
+
         foreach ($keys as $source => $target) {
-            $row[$target] = $row[$source] ?? $row[$target] ?? '';
+            $normalised[$target] = $row[$source] ?? $row[$target] ?? '';
         }
 
-        $row['Sample_Available'] = filter_var($row['Sample_Available'], FILTER_VALIDATE_BOOLEAN);
-        $row['Finish'] = $brand === 'tailormade'
-            ? $this->normaliseFinish((string) $row['Finish'])
-            : (string) $row['Finish'];
-        $row['Factory'] = $this->normaliseFactory((string) $row['Factory']);
+        $normalised['Sample_Available'] = filter_var($normalised['Sample_Available'], FILTER_VALIDATE_BOOLEAN);
+        $normalised['Finish'] = $brand === 'tailormade'
+            ? $this->normaliseFinish((string) $normalised['Finish'])
+            : (string) $normalised['Finish'];
+        $normalised['Factory'] = $this->normaliseFactory((string) $normalised['Factory']);
 
-        return $row;
+        return $normalised;
     }
 
     /**
