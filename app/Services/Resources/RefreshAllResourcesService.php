@@ -13,6 +13,7 @@ class RefreshAllResourcesService
     public function __construct(
         private GoogleSheetsService $googleSheetsService,
         private CombinedDataService $combinedDataService,
+        private FlorimDataService $florimDataService,
         private SampleRequestDataService $sampleRequestDataService,
         private SampleRequestFormatterService $sampleRequestFormatterService,
         private ProductFinderDataService $productFinderDataService,
@@ -39,6 +40,7 @@ class RefreshAllResourcesService
 
             $this->saveResource($stored, 'combined-data/allbrands', 'allbrands.json', 'app/private/combined-data/', $this->combinedDataService->createCombinedData('allbrands', $standardRows), $onResourceSaved);
             $this->saveResource($stored, 'combined-data/allpending', 'allpending.json', 'app/private/combined-data/', $this->combinedDataService->createCombinedData('allpending', $standardRows), $onResourceSaved);
+            $this->saveResource($stored, 'florimuk/florimuk', 'florimuk.json', 'app/private/florimuk/', $this->florimDataService->generate($standardRows), $onResourceSaved);
 
             foreach (['pt', 'pp', 'tm', 'domus', 'florimuk'] as $brand) {
                 $formattedBrand = $this->sampleRequestFormatterService->formatBrand(

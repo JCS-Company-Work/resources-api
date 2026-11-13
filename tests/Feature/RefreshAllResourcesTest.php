@@ -2,6 +2,7 @@
 
 use App\Services\GoogleSheets\GoogleSheetsService;
 use App\Services\Resources\CombinedDataService;
+use App\Services\Resources\FlorimDataService;
 use App\Services\Resources\ProductFinderDataService;
 use App\Services\Resources\RefreshAllResourcesService;
 use App\Services\Resources\ResourceSaveService;
@@ -21,6 +22,9 @@ test('it refreshes all generated resources from one sheets request', function ()
             fn (string $filename, array $receivedRows): bool => in_array($filename, ['allbrands', 'allpending'], true)
                 && $receivedRows === $standardRows
         )->andReturn([]);
+    });
+    $this->mock(FlorimDataService::class, function ($mock) use ($standardRows) {
+        $mock->shouldReceive('generate')->once()->with($standardRows)->andReturn([]);
     });
     $this->mock(SampleRequestDataService::class, function ($mock) use ($sampleRequestRows) {
         $mock->shouldReceive('createSampleRequestData')->times(5)->withArgs(
@@ -51,7 +55,7 @@ test('it refreshes all generated resources from one sheets request', function ()
         ]);
     });
     $this->mock(ResourceSaveService::class, function ($mock) {
-        $mock->shouldReceive('saveResource')->times(15);
+        $mock->shouldReceive('saveResource')->times(16);
     });
 
     $updated = [];
@@ -62,7 +66,8 @@ test('it refreshes all generated resources from one sheets request', function ()
     );
 
     expect($result['success'])->toBeTrue()
-        ->and($updated)->toHaveCount(15)
+        ->and($updated)->toHaveCount(16)
+        ->and($updated)->toContain('florimuk/florimuk')
         ->and($updated)->toContain('samples-tool/emilgroup')
         ->and($updated)->toContain('samples-tool/tm exclusive')
         ->and($updated)->toContain('product-finder/tailormade/filter-panel');

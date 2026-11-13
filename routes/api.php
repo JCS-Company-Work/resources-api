@@ -31,6 +31,7 @@ Route::put('/resources/refresh-all', RefreshAllResourcesController::class)
 // Florim UK routes
 Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
     Route::get('/florimuk', [FlorimDataController::class, 'getFlorimData']);
+    Route::put('/florimuk', [FlorimDataController::class, 'updateFlorimData']);
 });
 
 // File upload resource routes
