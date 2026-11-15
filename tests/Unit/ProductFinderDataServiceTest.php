@@ -113,6 +113,23 @@ test('it separates special pieces from regular sizes', function () {
         ]);
 });
 
+test('it orders filter options alphabetically and numeric values naturally', function (string $brand) {
+    $resources = (new ProductFinderDataService)->generate($brand, [
+        productFinderRow(['appearsOn' => 'all', 'shade' => 'White', 'size' => '1200 x 1200']),
+        productFinderRow(['appearsOn' => 'all', 'shade' => 'black', 'size' => '300 x 300']),
+        productFinderRow(['appearsOn' => 'all', 'shade' => 'Grey', 'size' => '600 x 600']),
+        productFinderRow(['appearsOn' => 'all', 'shade' => 'Black', 'size' => '300 x 300']),
+    ]);
+
+    expect($resources['filter-panel']['Colour']['filters'])->toBe([
+        ['label' => 'Black', 'toggle-btn' => 'black', 'filter-name' => 'filter-black'],
+        ['label' => 'Grey', 'toggle-btn' => 'grey', 'filter-name' => 'filter-grey'],
+        ['label' => 'White', 'toggle-btn' => 'white', 'filter-name' => 'filter-white'],
+    ])
+        ->and(array_column($resources['filter-panel']['Size']['filters'], 'label'))
+        ->toBe(['300 x 300 mm', '600 x 600 mm', '1200 x 1200 mm']);
+})->with(['porcelaintiles', 'tailormade']);
+
 test('it rejects an unsupported brand', function () {
     expect(fn () => (new ProductFinderDataService)->generate('unknown', []))
         ->toThrow(InvalidArgumentException::class);

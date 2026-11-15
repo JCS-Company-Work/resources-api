@@ -301,6 +301,8 @@ class ProductFinderDataService
                 ))))
                 : array_values(array_unique(array_filter(array_column($references, $column))));
 
+            sort($values, SORT_NATURAL | SORT_FLAG_CASE);
+
             $filters = [];
             foreach ($values as $value) {
                 if ($label === 'Finish' && str_contains($value, 'chip')) {
