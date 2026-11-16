@@ -3,14 +3,16 @@
 use App\Services\GoogleSheets\GoogleSheetsService;
 use App\Services\Resources\CombinedDataService;
 use App\Services\Resources\FlorimDataService;
-use App\Services\Resources\ProductFinderDataService;
 use App\Services\Resources\RefreshAllResourcesService;
 use App\Services\Resources\ResourceSaveService;
 use App\Services\Resources\SampleRequest\SampleRequestDataService;
 use App\Services\Resources\SampleRequest\SampleRequestFormatterService;
 
 test('it refreshes all generated resources from one sheets request', function () {
-    $standardRows = [['productCode' => 'CINDER']];
+    $standardRows = [
+        ['productCode' => 'ONYX', 'postID' => '1', 'appearsOn' => 'all', 'range' => 'Onyx Sense'],
+        ['productCode' => 'ANIMA', 'postID' => '2', 'appearsOn' => 'all', 'range' => 'Anima'],
+    ];
     $sampleRequestRows = [['productCode' => 'CINDER', 'attributes' => [], 'picklistLocations' => []]];
 
     $this->mock(GoogleSheetsService::class, function ($mock) use ($standardRows, $sampleRequestRows) {
@@ -47,15 +49,15 @@ test('it refreshes all generated resources from one sheets request', function ()
             }
         );
     });
-    $this->mock(ProductFinderDataService::class, function ($mock) {
-        $mock->shouldReceive('generate')->twice()->andReturn([
-            'tile-filter-data' => [],
-            'tile-filter-ref-data' => [],
-            'filter-panel' => [],
-        ]);
-    });
-    $this->mock(ResourceSaveService::class, function ($mock) {
-        $mock->shouldReceive('saveResource')->times(16);
+    $filterPanels = [];
+    $this->mock(ResourceSaveService::class, function ($mock) use (&$filterPanels) {
+        $mock->shouldReceive('saveResource')->times(16)->andReturnUsing(
+            function (string $filename, string $path, array $data) use (&$filterPanels): void {
+                if ($filename === 'filter-panel.json' && str_starts_with($path, 'app/private/product-finder/')) {
+                    $filterPanels[$path] = $data;
+                }
+            }
+        );
     });
 
     $updated = [];
@@ -70,7 +72,11 @@ test('it refreshes all generated resources from one sheets request', function ()
         ->and($updated)->toContain('florimuk/florimuk')
         ->and($updated)->toContain('samples-tool/emilgroup')
         ->and($updated)->toContain('samples-tool/tm exclusive')
-        ->and($updated)->toContain('product-finder/tailormade/filter-panel');
+        ->and($updated)->toContain('product-finder/tailormade/filter-panel')
+        ->and(array_column($filterPanels['app/private/product-finder/porcelaintiles/']['Range']['filters'], 'label'))
+        ->toBe(['Anima', 'Onyx Sense'])
+        ->and(array_column($filterPanels['app/private/product-finder/tailormade/']['Range']['filters'], 'label'))
+        ->toBe(['Anima', 'Onyx Sense']);
 });
 
 test('it requires the dedicated refresh token', function () {
