@@ -1,6 +1,6 @@
 # Resources API
 
-A Laravel API that serves JSON resources for the product catalogue, sample request tool, product finder, and TM Colours. Resources are read from private storage and cached; the combined-data update endpoint can regenerate its files from Google Sheets.
+A Laravel API that serves JSON resources for the product catalogue, sample request tool, product finder, and TM Colours. Resources are read from private storage and cached; the API can also read live data and regenerate resources from Google Sheets.
 
 ## Requirements
 
@@ -34,6 +34,7 @@ Configure a distinct token for each API client:
 | Environment variable | Used by |
 | --- | --- |
 | `COMBINED_DATA_API_TOKEN` | Combined-data reads and generation |
+| `LIVE_DATA_TOKEN` | Live Google Sheets data |
 | `FLORIMUK_API_TOKEN` | Florim UK data |
 | `SAMPLES_API_TOKEN` | Sample request data |
 | `PRODUCT_FINDER_API_TOKEN` | Product Finder data |
@@ -42,7 +43,7 @@ Configure a distinct token for each API client:
 
 Send tokens in the `X-API-Token` request header.
 
-Combined-data generation also requires:
+Live data and combined-data generation also require:
 
 | Environment variable | Purpose |
 | --- | --- |
@@ -83,6 +84,7 @@ Generated files are stored under `storage/app/private/combined-data/`.
 
 | Method | Path | Token |
 | --- | --- | --- |
+| `GET` | `/api/live-data` | `LIVE_DATA_TOKEN` |
 | `GET` | `/api/florimuk` | `FLORIMUK_API_TOKEN` |
 | `GET` | `/api/sample-request/{brand}` | `SAMPLES_API_TOKEN` |
 | `GET` | `/api/product-finder/all` | `PRODUCT_FINDER_API_TOKEN` |
@@ -92,6 +94,8 @@ Generated files are stored under `storage/app/private/combined-data/`.
 | `GET` | `/api/tm-colours/filter-panel` | `TM_COLOURS_API_TOKEN` |
 | `GET` | `/api/tm-colours/colour-data` | `TM_COLOURS_API_TOKEN` |
 | `GET` | `/api/tm-colours/colour-ref-data` | `TM_COLOURS_API_TOKEN` |
+
+`GET /api/live-data` fetches the configured standard Google Sheets range on every request. It returns the existing service's processed rows, including their fields, and skips rows without a product code. Its response is not cached.
 
 ### Legacy resource uploads
 

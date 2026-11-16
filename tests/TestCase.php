@@ -9,6 +9,7 @@ abstract class TestCase extends BaseTestCase
     protected const API_KEYS = [
         'resource_api' => 'test-resource-token',
         'combined_data_api' => 'test-combined-token',
+        'live_data_api' => 'test-live-data-token',
         'product_finder_api' => 'test-finder-token',
         'tm_colours_api' => 'test-tm-token',
         'samples_api' => 'test-samples-token',

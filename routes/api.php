@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CombinedDataController;
 use App\Http\Controllers\Api\FlorimDataController;
+use App\Http\Controllers\Api\LiveDataController;
 use App\Http\Controllers\Api\ProductFinderController;
 use App\Http\Controllers\Api\RefreshAllResourcesController;
 use App\Http\Controllers\Api\ResourceUploadController;
@@ -27,6 +28,9 @@ Route::middleware(VerifyApiToken::using('combined_data_api'))->group(function ()
 
 Route::put('/resources/refresh-all', RefreshAllResourcesController::class)
     ->middleware(VerifyApiToken::using('resource_api'));
+
+Route::get('/live-data', LiveDataController::class)
+    ->middleware(VerifyApiToken::using('live_data_api'));
 
 // Florim UK routes
 Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
