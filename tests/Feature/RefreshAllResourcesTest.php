@@ -12,6 +12,35 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+test('resource progress is flushed before the refresh completes', function () {
+    $flushed = '';
+    $flushedWhileRunning = false;
+    $this->mock(RefreshAllResourcesService::class, function ($mock) use (&$flushed, &$flushedWhileRunning) {
+        $mock->shouldReceive('refresh')->once()->andReturnUsing(
+            function (callable $onResourceSaved) use (&$flushed, &$flushedWhileRunning): array {
+                $onResourceSaved('combined-data/allbrands');
+                $flushedWhileRunning = str_contains($flushed, '"resource":"combined-data\/allbrands"');
+
+                return ['success' => true, 'resources' => [], 'cache_purge' => []];
+            }
+        );
+    });
+
+    $response = $this->withApiToken('resource_api')->putJson('/api/resources/refresh-all');
+    ob_start(function (string $buffer) use (&$flushed): string {
+        $flushed .= $buffer;
+
+        return '';
+    });
+    try {
+        $response->baseResponse->sendContent();
+    } finally {
+        ob_end_clean();
+    }
+
+    expect($flushedWhileRunning)->toBeTrue();
+});
+
 test('refresh all reports each site purge after saving resources', function () {
     $originalStoragePath = app()->storagePath();
     $testStoragePath = $originalStoragePath.'/framework/testing/refresh-all-'.Str::uuid();
@@ -53,7 +82,11 @@ test('refresh all reports each site purge after saving resources', function () {
                 'tailor-made' => ['success' => true, 'message' => 'Cache purged for Tailor Made'],
             ],
         ]);
-        expect($events)->toHaveCount(15);
+        expect($events)->toHaveCount(16)
+            ->and($events[count($events) - 2])->toMatchArray([
+                'event' => 'cache_purge',
+                'cache_purge' => end($events)['cache_purge'],
+            ]);
         Http::assertSentCount(3);
         Http::assertSent(fn ($request) => $request->method() === 'POST'
             && $request->url() === 'https://hub.example.test/purge'
@@ -65,6 +98,45 @@ test('refresh all reports each site purge after saving resources', function () {
         File::deleteDirectory($testStoragePath);
     }
 });
+
+test('a failed refresh reports the resource and partial purge results', function (string $failure) {
+    $this->mock(GoogleSheetsService::class, function ($mock) {
+        $mock->shouldReceive('getRows')->once()->withNoArgs()->andReturn([]);
+        $mock->shouldReceive('getRows')->once()->with('sample-request')->andReturn([]);
+    });
+    $this->mock(CombinedDataService::class, function ($mock) use ($failure) {
+        $mock->shouldReceive('createCombinedData')->once()->with('allbrands', [])->andReturn([]);
+        $pending = $mock->shouldReceive('createCombinedData')->once()->with('allpending', []);
+        if ($failure === 'generation') {
+            $pending->andThrow(new RuntimeException('Generation failed'));
+        } else {
+            $pending->andReturn([]);
+        }
+    });
+    $this->mock(ResourceSaveService::class, function ($mock) use ($failure) {
+        $mock->shouldReceive('saveResource')->once()->with('allbrands.json', 'app/private/combined-data/', [], false);
+        if ($failure === 'save') {
+            $mock->shouldReceive('saveResource')->once()->with('allpending.json', 'app/private/combined-data/', [], false)
+                ->andThrow(new RuntimeException('Save failed'));
+        }
+        $mock->shouldReceive('purge')->once()->with('refresh-all')
+            ->andReturn(['hub' => ['success' => true, 'message' => 'Cache purged for Hub']]);
+    });
+
+    $response = $this->withApiToken('resource_api')->putJson('/api/resources/refresh-all');
+    $response->assertOk()->assertStreamed();
+    $events = array_map(
+        fn (string $line): array => json_decode($line, true, 512, JSON_THROW_ON_ERROR),
+        explode("\n", trim($response->streamedContent()))
+    );
+
+    expect($events)->toBe([
+        ['event' => 'resource_updated', 'resource' => 'combined-data/allbrands'],
+        ['event' => 'resource_failed', 'resource' => 'combined-data/allpending'],
+        ['event' => 'cache_purge', 'cache_purge' => ['hub' => ['success' => true, 'message' => 'Cache purged for Hub']]],
+        ['event' => 'failed', 'message' => $failure === 'generation' ? 'Generation failed' : 'Save failed'],
+    ]);
+})->with(['generation', 'save']);
 
 test('it refreshes all generated resources from one sheets request', function () {
     $standardRows = [
