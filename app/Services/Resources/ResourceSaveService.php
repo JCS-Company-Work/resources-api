@@ -33,7 +33,7 @@ class ResourceSaveService
      *
      * @throws \RuntimeException
      */
-    public function saveResource($filename, $resourcePath, $data)
+    public function saveResource($filename, $resourcePath, $data, bool $purgeCache = true)
     {
 
         // Determine the full path for the resource file.
@@ -60,14 +60,25 @@ class ResourceSaveService
         // Clear the cache for the updated resource.
         Cache::forget(pathinfo($filename, PATHINFO_FILENAME));
 
+        if ($purgeCache) {
+            $this->purge($filename);
+        }
+    }
+
+    /**
+     * @return array<string, array{success: bool, message: ?string}>
+     */
+    public function purge(string $resource): array
+    {
         try {
-            // Purge the Hub cache using the LiteSpeedPurgeService.
-            $this->liteSpeedPurgeService->purgeHub();
+            return $this->liteSpeedPurgeService->purge();
         } catch (\Throwable $e) {
-            Log::error('Hub cache purge failed after resource update.', [
-                'resource' => $filename,
+            Log::error('Cache purge failed after resource update.', [
+                'resource' => $resource,
                 'error' => $e->getMessage(),
             ]);
+
+            return ['error' => ['success' => false, 'message' => 'Cache purge failed. Check the application log.']];
         }
     }
 }

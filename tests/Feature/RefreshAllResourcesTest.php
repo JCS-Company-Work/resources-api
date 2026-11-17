@@ -7,6 +7,64 @@ use App\Services\Resources\RefreshAllResourcesService;
 use App\Services\Resources\ResourceSaveService;
 use App\Services\Resources\SampleRequest\SampleRequestDataService;
 use App\Services\Resources\SampleRequest\SampleRequestFormatterService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+
+test('refresh all reports each site purge after saving resources', function () {
+    $originalStoragePath = app()->storagePath();
+    $testStoragePath = $originalStoragePath.'/framework/testing/refresh-all-'.Str::uuid();
+    File::makeDirectory($testStoragePath, 0755, true);
+    app()->useStoragePath($testStoragePath);
+
+    try {
+        config([
+            'services.cache_purge' => [
+                'hub' => ['url' => 'https://hub.example.test/purge', 'token' => 'hub-token'],
+                'porcelain-tiles' => ['url' => 'https://porcelain.example.test/purge', 'token' => 'porcelain-token'],
+                'tailor-made' => ['url' => 'https://tailor.example.test/purge', 'token' => 'tailor-token'],
+            ],
+        ]);
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://hub.example.test/purge' => Http::response(['success' => true, 'message' => 'Cache purged for Hub']),
+            'https://porcelain.example.test/purge' => Http::response('Server error', 500),
+            'https://tailor.example.test/purge' => Http::response(['success' => true, 'message' => 'Cache purged for Tailor Made']),
+        ]);
+        $this->mock(GoogleSheetsService::class, function ($mock) {
+            $mock->shouldReceive('getRows')->once()->withNoArgs()->andReturn([]);
+            $mock->shouldReceive('getRows')->once()->with('sample-request')->andReturn([]);
+        });
+
+        $response = $this->withApiToken('resource_api')->putJson('/api/resources/refresh-all');
+        $response->assertOk()->assertStreamed();
+        $events = array_map(
+            fn (string $line): array => json_decode($line, true, 512, JSON_THROW_ON_ERROR),
+            explode("\n", trim($response->streamedContent()))
+        );
+
+        expect(end($events))->toMatchArray([
+            'event' => 'completed',
+            'success' => true,
+            'cache_purge' => [
+                'hub' => ['success' => true, 'message' => 'Cache purged for Hub'],
+                'porcelain-tiles' => ['success' => false, 'message' => 'Cache purge returned HTTP 500.'],
+                'tailor-made' => ['success' => true, 'message' => 'Cache purged for Tailor Made'],
+            ],
+        ]);
+        expect($events)->toHaveCount(15);
+        Http::assertSentCount(3);
+        Http::assertSent(fn ($request) => $request->method() === 'POST'
+            && $request->url() === 'https://hub.example.test/purge'
+            && $request->hasHeader('X-Purge-Token', 'hub-token'));
+        Http::assertSent(fn ($request) => $request->url() === 'https://tailor.example.test/purge'
+            && $request->hasHeader('X-Purge-Token', 'tailor-token'));
+    } finally {
+        app()->useStoragePath($originalStoragePath);
+        File::deleteDirectory($testStoragePath);
+    }
+});
 
 test('it refreshes all generated resources from one sheets request', function () {
     $standardRows = [
@@ -50,17 +108,26 @@ test('it refreshes all generated resources from one sheets request', function ()
         );
     });
     $filterPanels = [];
-    $this->mock(ResourceSaveService::class, function ($mock) use (&$filterPanels) {
+    $updated = [];
+    $this->mock(ResourceSaveService::class, function ($mock) use (&$filterPanels, &$updated) {
         $mock->shouldReceive('saveResource')->times(16)->andReturnUsing(
-            function (string $filename, string $path, array $data) use (&$filterPanels): void {
+            function (string $filename, string $path, array $data, bool $purgeCache) use (&$filterPanels): void {
+                expect($purgeCache)->toBeFalse();
+
                 if ($filename === 'filter-panel.json' && str_starts_with($path, 'app/private/product-finder/')) {
                     $filterPanels[$path] = $data;
                 }
             }
         );
+        $mock->shouldReceive('purge')->once()->with('refresh-all')->andReturnUsing(
+            function () use (&$updated): array {
+                expect($updated)->toHaveCount(16);
+
+                return [];
+            }
+        );
     });
 
-    $updated = [];
     $result = app(RefreshAllResourcesService::class)->refresh(
         function (string $resource) use (&$updated): void {
             $updated[] = $resource;
@@ -77,6 +144,41 @@ test('it refreshes all generated resources from one sheets request', function ()
         ->toBe(['Anima', 'Onyx Sense'])
         ->and(array_column($filterPanels['app/private/product-finder/tailormade/']['Range']['filters'], 'label'))
         ->toBe(['Anima', 'Onyx Sense']);
+});
+
+test('it purges once when a refresh fails after saving a resource', function () {
+    $this->mock(GoogleSheetsService::class, function ($mock) {
+        $mock->shouldReceive('getRows')->once()->withNoArgs()->andReturn([]);
+        $mock->shouldReceive('getRows')->once()->with('sample-request')->andReturn([]);
+    });
+    $this->mock(CombinedDataService::class, function ($mock) {
+        $mock->shouldReceive('createCombinedData')->once()->with('allbrands', [])->andReturn([]);
+        $mock->shouldReceive('createCombinedData')->once()->with('allpending', [])->andThrow(new RuntimeException('Generation failed'));
+    });
+    $this->mock(ResourceSaveService::class, function ($mock) {
+        $mock->shouldReceive('saveResource')->once()->with('allbrands.json', 'app/private/combined-data/', [], false);
+        $mock->shouldReceive('purge')->once()->with('refresh-all');
+    });
+
+    expect(fn () => app(RefreshAllResourcesService::class)->refresh())
+        ->toThrow(RuntimeException::class, 'Generation failed');
+
+    $lock = Cache::lock('resources-refresh-all', 1800);
+    expect($lock->get())->toBeTrue();
+    $lock->release();
+});
+
+test('it does not purge when a refresh fails before saving any resources', function () {
+    $this->mock(GoogleSheetsService::class, function ($mock) {
+        $mock->shouldReceive('getRows')->once()->withNoArgs()->andThrow(new RuntimeException('Sheets unavailable'));
+    });
+    $this->mock(ResourceSaveService::class, function ($mock) {
+        $mock->shouldNotReceive('saveResource');
+        $mock->shouldNotReceive('purge');
+    });
+
+    expect(fn () => app(RefreshAllResourcesService::class)->refresh())
+        ->toThrow(RuntimeException::class, 'Sheets unavailable');
 });
 
 test('it requires the dedicated refresh token', function () {

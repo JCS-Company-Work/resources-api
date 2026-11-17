@@ -41,7 +41,7 @@ test('it formats and saves the sample request file for a brand', function () {
                 sampleRequestSheetRow(['colour' => 'Pending', 'pendingItem' => 'Yes']),
             ]);
         });
-        $this->mock(LiteSpeedPurgeService::class, fn ($mock) => $mock->shouldReceive('purgeHub'));
+        $this->mock(LiteSpeedPurgeService::class, fn ($mock) => $mock->shouldReceive('purge'));
         Cache::forget('pt');
 
         $this->withApiToken('samples_api')

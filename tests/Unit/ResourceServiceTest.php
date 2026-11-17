@@ -53,7 +53,7 @@ class ResourceServiceTest extends TestCase
     public function test_update_rejects_invalid_json(): void
     {
         $service = $this->service;
-        $this->purgeService->shouldNotReceive('purgeHub');
+        $this->purgeService->shouldNotReceive('purge');
 
         $this->expectException(\InvalidArgumentException::class);
         $service->update('allbrands', 'combined-data', '', '{invalid json');
@@ -62,7 +62,7 @@ class ResourceServiceTest extends TestCase
     public function test_update_rejects_json_string(): void
     {
         $service = $this->service;
-        $this->purgeService->shouldNotReceive('purgeHub');
+        $this->purgeService->shouldNotReceive('purge');
 
         $this->expectException(\InvalidArgumentException::class);
         $service->update('allbrands', 'combined-data', '', '"hello"');
@@ -75,7 +75,7 @@ class ResourceServiceTest extends TestCase
 
         try {
             Cache::put('allbrands', ['old' => 'data']);
-            $this->purgeService->shouldReceive('purgeHub')->once();
+            $this->purgeService->shouldReceive('purge')->once();
 
             $service = $this->service;
             $service->update('allbrands', 'combined-data', '', '{"test":"data"}');
@@ -98,7 +98,7 @@ class ResourceServiceTest extends TestCase
         $backup = file_exists($path) ? file_get_contents($path) : null;
 
         try {
-            $this->purgeService->shouldReceive('purgeHub')->once();
+            $this->purgeService->shouldReceive('purge')->once();
             Log::shouldReceive('error')->never();
 
             $this->service->update('allpending', 'combined-data', '', '{"test":"data"}');
@@ -114,7 +114,7 @@ class ResourceServiceTest extends TestCase
         $backup = file_exists($path) ? file_get_contents($path) : null;
 
         try {
-            $this->purgeService->shouldReceive('purgeHub')
+            $this->purgeService->shouldReceive('purge')
                 ->once()
                 ->andThrow(new RuntimeException('Hub is down'));
 
@@ -145,7 +145,7 @@ class ResourceServiceTest extends TestCase
         }
 
         try {
-            $this->purgeService->shouldReceive('purgeHub')->twice();
+            $this->purgeService->shouldReceive('purge')->twice();
 
             $service = $this->service;
             $service->update('filter-panel', 'product-finder', 'porcelaintiles', '{"brand":"porcelaintiles"}');

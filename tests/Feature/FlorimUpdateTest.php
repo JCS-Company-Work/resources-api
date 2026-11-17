@@ -26,7 +26,7 @@ test('it formats and saves Florim UK data', function () {
                 ],
             ]);
         });
-        $this->mock(LiteSpeedPurgeService::class, fn ($mock) => $mock->shouldReceive('purgeHub'));
+        $this->mock(LiteSpeedPurgeService::class, fn ($mock) => $mock->shouldReceive('purge'));
         Cache::forget('florimuk');
 
         $this->withApiToken('florimuk')

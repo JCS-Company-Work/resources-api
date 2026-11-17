@@ -23,7 +23,7 @@ class RefreshAllResourcesService
     /**
      * Refresh every resource generated from the shared Google Sheets data.
      *
-     * @return array{success: bool, resources: array<string, bool>}
+     * @return array{success: bool, resources: array<string, bool>, cache_purge: array<string, array{success: bool, message: ?string}>}
      */
     public function refresh(?callable $onResourceSaved = null): array
     {
@@ -33,10 +33,11 @@ class RefreshAllResourcesService
             throw new RuntimeException('Another resource refresh is already running.');
         }
 
+        $stored = [];
+
         try {
             $standardRows = $this->googleSheetsService->getRows();
             $sampleRequestRows = $this->googleSheetsService->getRows('sample-request');
-            $stored = [];
 
             $this->saveResource($stored, 'combined-data/allbrands', 'allbrands.json', 'app/private/combined-data/', $this->combinedDataService->createCombinedData('allbrands', $standardRows), $onResourceSaved);
             $this->saveResource($stored, 'combined-data/allpending', 'allpending.json', 'app/private/combined-data/', $this->combinedDataService->createCombinedData('allpending', $standardRows), $onResourceSaved);
@@ -85,14 +86,19 @@ class RefreshAllResourcesService
                     );
                 }
             }
-
-            return [
-                'success' => true,
-                'resources' => $stored,
-            ];
         } finally {
-            $lock->release();
+            try {
+                $purgeResults = $stored !== [] ? $this->resourceSaveService->purge('refresh-all') : [];
+            } finally {
+                $lock->release();
+            }
         }
+
+        return [
+            'success' => true,
+            'resources' => $stored,
+            'cache_purge' => $purgeResults,
+        ];
     }
 
     private function saveResource(
@@ -103,7 +109,7 @@ class RefreshAllResourcesService
         array $data,
         ?callable $onResourceSaved = null
     ): void {
-        $this->resourceSaveService->saveResource($filename, $path, $data);
+        $this->resourceSaveService->saveResource($filename, $path, $data, false);
         $stored[$resource] = true;
 
         if ($onResourceSaved !== null) {

@@ -46,7 +46,7 @@ test('it generates and saves all product finder resources', function () {
         $this->mock(GoogleSheetsService::class, function ($mock) {
             $mock->shouldReceive('getRows')->once()->andReturn([productFinderUpdateRow()]);
         });
-        $this->mock(LiteSpeedPurgeService::class, fn ($mock) => $mock->shouldReceive('purgeHub')->times(3));
+        $this->mock(LiteSpeedPurgeService::class, fn ($mock) => $mock->shouldReceive('purge')->times(3));
 
         $response = $this->withApiToken('product_finder_api')
             ->putJson('/api/product-finder/porcelaintiles');

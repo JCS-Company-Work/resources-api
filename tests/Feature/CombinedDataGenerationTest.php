@@ -38,7 +38,7 @@ class CombinedDataGenerationTest extends TestCase
                 $mock->shouldReceive('getRows')->once()->andReturn($sheetRows);
             });
             $this->mock(LiteSpeedPurgeService::class, function ($mock) {
-                $mock->shouldReceive('purgeHub')->once();
+                $mock->shouldReceive('purge')->once();
             });
 
             Cache::put('allbrands', ['old' => 'data']);

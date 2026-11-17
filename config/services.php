@@ -44,9 +44,19 @@ return [
         'samples_api' => env('SAMPLES_API_TOKEN'),
         'florimuk' => env('FLORIMUK_API_TOKEN'),
     ],
-    'hub_cache_purge' => [
-        'url' => env('HUB_CACHE_PURGE_URL'),
-        'token' => env('HUB_CACHE_PURGE_TOKEN'),
+    'cache_purge' => [
+        'hub' => [
+            'url' => env('HUB_CACHE_PURGE_URL'),
+            'token' => env('HUB_CACHE_PURGE_TOKEN'),
+        ],
+        'porcelain-tiles' => [
+            'url' => env('PORCELAIN_TILES_CACHE_PURGE_URL'),
+            'token' => env('PORCELAIN_TILES_CACHE_PURGE_TOKEN'),
+        ],
+        // 'tailor-made' => [
+        //     'url' => env('TAILOR_MADE_CACHE_PURGE_URL'),
+        //     'token' => env('TAILOR_MADE_CACHE_PURGE_TOKEN'),
+        // ],
     ],
     'google_sheets' => [
         'application_name' => env('GOOGLE_SHEETS_APPLICATION_NAME'),

@@ -6,7 +6,6 @@ use App\Services\LiteSpeedPurgeService;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use RuntimeException;
 use Tests\TestCase;
 
 class LiteSpeedPurgeServiceTest extends TestCase
@@ -18,18 +17,21 @@ class LiteSpeedPurgeServiceTest extends TestCase
         parent::setUp();
 
         config([
-            'services.hub_cache_purge.url' => self::URL,
-            'services.hub_cache_purge.token' => 'secret-token',
+            'services.cache_purge' => [
+                'hub' => ['url' => self::URL, 'token' => 'secret-token'],
+            ],
         ]);
     }
 
     public function test_it_posts_to_the_hub_with_the_purge_token(): void
     {
-        Http::fake([self::URL => Http::response(['success' => true])]);
-        Log::shouldReceive('info')->once()->with('Hub LiteSpeed cache purge confirmed.');
+        Http::preventStrayRequests();
+        Http::fake([self::URL => Http::response(['success' => true, 'message' => 'Cache purged for Hub'])]);
+        Log::shouldReceive('info')->once()->with('LiteSpeed cache purge requested.', ['site' => 'hub']);
 
-        (new LiteSpeedPurgeService)->purgeHub();
+        $result = (new LiteSpeedPurgeService)->purge();
 
+        $this->assertSame(['hub' => ['success' => true, 'message' => 'Cache purged for Hub']], $result);
         Http::assertSentCount(1);
         Http::assertSent(fn (Request $request) => $request->method() === 'POST'
             && $request->url() === self::URL
@@ -37,48 +39,87 @@ class LiteSpeedPurgeServiceTest extends TestCase
             && $request->hasHeader('Accept', 'application/json'));
     }
 
-    public function test_it_throws_when_configuration_is_missing(): void
+    public function test_it_reports_when_configuration_is_missing(): void
     {
-        Http::fake();
+        Http::preventStrayRequests();
+        Log::shouldReceive('error')->twice()->with('LiteSpeed cache purge failed.', [
+            'site' => 'hub',
+            'error' => 'Cache purge configuration is missing.',
+        ]);
 
         foreach (['url', 'token'] as $missing) {
-            config(["services.hub_cache_purge.$missing" => null]);
+            config(['services.cache_purge.hub' => ['url' => self::URL, 'token' => 'secret-token']]);
+            config(["services.cache_purge.hub.$missing" => null]);
 
-            try {
-                (new LiteSpeedPurgeService)->purgeHub();
-                $this->fail('Expected a RuntimeException.');
-            } catch (RuntimeException $exception) {
-                $this->assertSame('Hub cache purge configuration is missing.', $exception->getMessage());
-            }
-
-            $this->setUp();
+            $this->assertSame(
+                ['hub' => ['success' => false, 'message' => 'Cache purge configuration is missing.']],
+                (new LiteSpeedPurgeService)->purge()
+            );
         }
 
         Http::assertNothingSent();
     }
 
-    public function test_it_logs_and_throws_when_the_hub_returns_an_error(): void
+    public function test_it_logs_and_reports_when_the_hub_returns_an_error(): void
     {
+        Http::preventStrayRequests();
         Http::fake([self::URL => Http::response('Server error', 500)]);
-        Log::shouldReceive('error')->once()->with('Hub LiteSpeed purge failed.', [
-            'status' => 500,
-            'body' => 'Server error',
+        Log::shouldReceive('error')->once()->with('LiteSpeed cache purge failed.', [
+            'site' => 'hub',
+            'error' => 'Cache purge returned HTTP 500.',
         ]);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Hub cache purge returned HTTP 500');
-
-        (new LiteSpeedPurgeService)->purgeHub();
+        $this->assertSame(
+            ['hub' => ['success' => false, 'message' => 'Cache purge returned HTTP 500.']],
+            (new LiteSpeedPurgeService)->purge()
+        );
     }
 
-    public function test_it_throws_when_the_hub_does_not_confirm_the_purge(): void
+    public function test_it_reports_when_the_hub_does_not_confirm_the_purge(): void
     {
+        Http::preventStrayRequests();
         Http::fake([self::URL => Http::response(['success' => false])]);
         Log::shouldReceive('info')->never();
+        Log::shouldReceive('error')->once()->with('LiteSpeed cache purge failed.', [
+            'site' => 'hub',
+            'error' => 'The site did not confirm the cache purge request.',
+        ]);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Hub did not confirm the cache purge.');
+        $this->assertSame(
+            ['hub' => ['success' => false, 'message' => 'The site did not confirm the cache purge request.']],
+            (new LiteSpeedPurgeService)->purge()
+        );
+    }
 
-        (new LiteSpeedPurgeService)->purgeHub();
+    public function test_it_continues_to_other_sites_after_a_connection_failure(): void
+    {
+        config(['services.cache_purge' => [
+            'hub' => ['url' => self::URL, 'token' => 'hub-token'],
+            'tailor-made' => ['url' => 'https://tailor.example.test/purge', 'token' => 'tailor-token'],
+        ]]);
+        Http::preventStrayRequests();
+        Http::fake([
+            self::URL => Http::failedConnection(),
+            'https://tailor.example.test/purge' => Http::response(['success' => true, 'message' => 'Cache purged for Tailor Made']),
+        ]);
+
+        $result = (new LiteSpeedPurgeService)->purge();
+
+        $this->assertSame([
+            'hub' => ['success' => false, 'message' => 'Cache purge request failed. Check the application log.'],
+            'tailor-made' => ['success' => true, 'message' => 'Cache purged for Tailor Made'],
+        ], $result);
+        Http::assertSentCount(2);
+    }
+
+    public function test_it_accepts_a_successful_response_without_a_message(): void
+    {
+        Http::preventStrayRequests();
+        Http::fake([self::URL => Http::response(['success' => true])]);
+
+        $this->assertSame(
+            ['hub' => ['success' => true, 'message' => null]],
+            (new LiteSpeedPurgeService)->purge()
+        );
     }
 }

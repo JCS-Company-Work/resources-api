@@ -213,8 +213,7 @@ class ResourceUpdateService
         Cache::forget($resource);
 
         try {
-            // Purge the Hub cache using the LiteSpeedPurgeService.
-            $this->liteSpeedPurgeService->purgeHub();
+            $this->liteSpeedPurgeService->purge();
         } catch (\Throwable $e) {
             Log::error('Hub cache purge failed after resource update.', [
                 'resource' => $resource,

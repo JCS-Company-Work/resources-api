@@ -52,7 +52,15 @@ Live data and combined-data generation also require:
 | `GOOGLE_SHEETS_RANGE` | Sheet range to read |
 | `GOOGLE_SHEETS_CREDENTIALS` | Credentials JSON path relative to `storage/app/` |
 
-The optional `HUB_CACHE_PURGE_URL` and `HUB_CACHE_PURGE_TOKEN` configure the Hub cache purge integration.
+LiteSpeed cache purge endpoints are configured per site:
+
+| Site | URL | Token |
+| --- | --- | --- |
+| Hub | `HUB_CACHE_PURGE_URL` | `HUB_CACHE_PURGE_TOKEN` |
+| Porcelain Tiles | `PORCELAIN_TILES_CACHE_PURGE_URL` | `PORCELAIN_TILES_CACHE_PURGE_TOKEN` |
+| Tailor Made | `TAILOR_MADE_CACHE_PURGE_URL` | `TAILOR_MADE_CACHE_PURGE_TOKEN` |
+
+Unconfigured sites are reported as failed purges; resource updates continue.
 
 ## API endpoints
 
@@ -107,6 +115,8 @@ The JSON upload endpoints remain available during migration to generated resourc
 ## Resource files and caching
 
 JSON resources are stored in private local storage, under `storage/app/private/`. Reads are cached for 30 days. Resource generation clears the matching resource cache after writing the new file.
+
+The `refresh-all` endpoint requests one cache purge per site after the batch, including if it fails after saving some resources. Its `completed` event includes `cache_purge`, keyed by site, with each request's `success` and `message`. A successful response confirms the site accepted the purge request, not that the cache was cleared. Individual resource updates continue to request purges after each update.
 
 ## Tests
 
