@@ -53,6 +53,10 @@ return [
             'url' => env('PORCELAIN_TILES_CACHE_PURGE_URL'),
             'token' => env('PORCELAIN_TILES_CACHE_PURGE_TOKEN'),
         ],
+        'tv-porcelain-tiles' => [
+            'url' => env('TV_PORCELAIN_TILES_CACHE_PURGE_URL'),
+            'token' => env('TV_PORCELAIN_TILES_CACHE_PURGE_TOKEN'),
+        ],
         // 'tailor-made' => [
         //     'url' => env('TAILOR_MADE_CACHE_PURGE_URL'),
         //     'token' => env('TAILOR_MADE_CACHE_PURGE_TOKEN'),
