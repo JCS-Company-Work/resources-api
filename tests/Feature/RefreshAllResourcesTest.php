@@ -140,8 +140,13 @@ test('a failed refresh reports the resource and partial purge results', function
 
 test('it refreshes all generated resources from one sheets request', function () {
     $standardRows = [
-        ['productCode' => 'ONYX', 'postID' => '1', 'appearsOn' => 'all', 'range' => 'Onyx Sense'],
-        ['productCode' => 'ANIMA', 'postID' => '2', 'appearsOn' => 'all', 'range' => 'Anima'],
+        ['productCode' => 'ONYX', 'postID' => '1', 'appearsOn' => 'all', 'range' => 'Onyx Sense', 'ppCollection' => 'TM20'],
+        ['productCode' => 'ANIMA', 'postID' => '2', 'appearsOn' => 'all', 'range' => 'Anima', 'ppCollection' => 'Full Body'],
+        ['productCode' => 'A', 'postID' => '3', 'appearsOn' => 'all', 'range' => 'Anima', 'ppCollection' => 'TM12'],
+        ['productCode' => 'B', 'postID' => '4', 'appearsOn' => 'all', 'range' => 'Anima', 'ppCollection' => 'TM6'],
+        ['productCode' => 'C', 'postID' => '5', 'appearsOn' => 'all', 'range' => 'Anima', 'ppCollection' => 'TMGrip'],
+        ['productCode' => 'D', 'postID' => '6', 'appearsOn' => 'all', 'range' => 'Anima', 'ppCollection' => 'tm20'],
+        ['productCode' => 'E', 'postID' => '7', 'appearsOn' => 'all', 'range' => 'Anima', 'ppCollection' => 'Excluded', 'pendingItem' => 'yes'],
     ];
     $sampleRequestRows = [['productCode' => 'CINDER', 'attributes' => [], 'picklistLocations' => []]];
 
@@ -180,14 +185,18 @@ test('it refreshes all generated resources from one sheets request', function ()
         );
     });
     $filterPanels = [];
+    $referenceData = [];
     $updated = [];
-    $this->mock(ResourceSaveService::class, function ($mock) use (&$filterPanels, &$updated) {
+    $this->mock(ResourceSaveService::class, function ($mock) use (&$filterPanels, &$referenceData, &$updated) {
         $mock->shouldReceive('saveResource')->times(16)->andReturnUsing(
-            function (string $filename, string $path, array $data, bool $purgeCache) use (&$filterPanels): void {
+            function (string $filename, string $path, array $data, bool $purgeCache) use (&$filterPanels, &$referenceData): void {
                 expect($purgeCache)->toBeFalse();
 
                 if ($filename === 'filter-panel.json' && str_starts_with($path, 'app/private/product-finder/')) {
                     $filterPanels[$path] = $data;
+                }
+                if ($filename === 'tile-filter-ref-data.json' && str_starts_with($path, 'app/private/product-finder/')) {
+                    $referenceData[$path] = $data;
                 }
             }
         );
@@ -216,6 +225,24 @@ test('it refreshes all generated resources from one sheets request', function ()
         ->toBe(['Anima', 'Onyx Sense'])
         ->and(array_column($filterPanels['app/private/product-finder/tailormade/']['Range']['filters'], 'label'))
         ->toBe(['Anima', 'Onyx Sense']);
+
+    $slabs = [
+        'control-group' => 'pp_collection',
+        'filters' => [
+            ['label' => 'Full Body', 'toggle-btn' => 'full body', 'filter-name' => 'filter-full-body'],
+            ['label' => 'Tm6', 'toggle-btn' => 'tm6', 'filter-name' => 'filter-tm6'],
+            ['label' => 'Tm12', 'toggle-btn' => 'tm12', 'filter-name' => 'filter-tm12'],
+            ['label' => 'Tm20', 'toggle-btn' => 'tm20', 'filter-name' => 'filter-tm20'],
+            ['label' => 'Tmgrip', 'toggle-btn' => 'tmgrip', 'filter-name' => 'filter-tmgrip'],
+        ],
+    ];
+
+    expect($filterPanels['app/private/product-finder/porcelaintiles/']['Slabs'])->toBe($slabs)
+        ->and($filterPanels['app/private/product-finder/tailormade/']['Slabs'])->toBe($slabs)
+        ->and(array_column($referenceData['app/private/product-finder/porcelaintiles/'], 'pp_collection'))
+        ->toBe(['tm20', 'full body', 'tm12', 'tm6', 'tmgrip', 'tm20'])
+        ->and(array_column($referenceData['app/private/product-finder/tailormade/'], 'pp_collection'))
+        ->toBe(['tm20', 'full body', 'tm12', 'tm6', 'tmgrip', 'tm20']);
 });
 
 test('it purges once when a refresh fails after saving a resource', function () {

@@ -130,6 +130,25 @@ test('it orders filter options alphabetically and numeric values naturally', fun
         ->toBe(['300 x 300 mm', '600 x 600 mm', '1200 x 1200 mm']);
 })->with(['porcelaintiles', 'tailormade']);
 
+test('slab filters and reference data use eligible collection values', function (string $brand) {
+    $resources = (new ProductFinderDataService)->generate($brand, [
+        productFinderRow(['appearsOn' => 'all', 'ppCollection' => '']),
+        productFinderRow(['appearsOn' => 'all', 'ppCollection' => 'TM20']),
+        productFinderRow(['appearsOn' => 'all', 'ppCollection' => 'tm20']),
+        productFinderRow(['appearsOn' => 'all', 'ppCollection' => 'Full Body']),
+        productFinderRow(['appearsOn' => 'all', 'ppCollection' => 'Excluded', 'pendingItem' => 'yes']),
+    ]);
+
+    expect($resources['filter-panel']['Slabs'])->toBe([
+        'control-group' => 'pp_collection',
+        'filters' => [
+            ['label' => 'Full Body', 'toggle-btn' => 'full body', 'filter-name' => 'filter-full-body'],
+            ['label' => 'Tm20', 'toggle-btn' => 'tm20', 'filter-name' => 'filter-tm20'],
+        ],
+    ])->and(array_column($resources['tile-filter-ref-data'], 'pp_collection'))
+        ->toBe(['', 'tm20', 'tm20', 'full body']);
+})->with(['porcelaintiles', 'tailormade']);
+
 test('it rejects an unsupported brand', function () {
     expect(fn () => (new ProductFinderDataService)->generate('unknown', []))
         ->toThrow(InvalidArgumentException::class);

@@ -261,6 +261,7 @@ class ProductFinderDataService
                 'colour' => strtolower((string) ($brand === 'tailormade' ? $tile['Factory_Colour'] : $tile['Colour'])),
                 'shade' => strtolower((string) $tile['Shade']),
                 'effect' => strtolower((string) $this->effect($tile, $brand)),
+                'pp_collection' => strtolower((string) $tile['PP_Collection']),
                 'finish' => strtolower($this->referenceFinish((string) $tile['Finish'])),
                 'thickness' => strtolower((string) $this->thicknessFilter($tile, $brand)),
                 'size' => strtolower($this->formatSize((string) $tile['Size'])),
@@ -294,12 +295,14 @@ class ProductFinderDataService
         $panel = [];
 
         foreach ($definitions as $label => $column) {
-            $values = $column === 'size'
-                ? array_values(array_unique(array_filter(array_map(
+            if ($column === 'size') {
+                $values = array_values(array_unique(array_filter(array_map(
                     fn (array $tile): string => $tile[$column],
                     array_filter($references, fn (array $tile): bool => $tile['special_piece'] === '' && $tile['decor'] === '')
-                ))))
-                : array_values(array_unique(array_filter(array_column($references, $column))));
+                ))));
+            } else {
+                $values = array_values(array_unique(array_filter(array_column($references, $column))));
+            }
 
             sort($values, SORT_NATURAL | SORT_FLAG_CASE);
 
