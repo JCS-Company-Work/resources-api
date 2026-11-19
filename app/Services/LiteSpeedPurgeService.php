@@ -41,10 +41,9 @@ class LiteSpeedPurgeService
                     throw new RuntimeException('The site did not confirm the cache purge request.');
                 }
 
-                $message = $response->json('message');
                 $results[$site] = [
                     'success' => true,
-                    'message' => is_string($message) ? $message : null,
+                    'message' => 'Cache purge requested.',
                 ];
 
                 Log::info('LiteSpeed cache purge requested.', ['site' => $site]);

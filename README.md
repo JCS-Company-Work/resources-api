@@ -116,7 +116,7 @@ The JSON upload endpoints remain available during migration to generated resourc
 
 JSON resources are stored in private local storage, under `storage/app/private/`. Reads are cached for 30 days. Resource generation clears the matching resource cache after writing the new file.
 
-The `refresh-all` endpoint streams `resource_updated` events and, if a resource fails, a `resource_failed` event. It requests one cache purge per site after the batch, including if it fails after saving some resources, and streams a `cache_purge` event with each site's `success` and `message`. The `completed` event also includes these results for compatibility. A successful response confirms the site accepted the purge request, not that the cache was cleared. Individual resource updates continue to request purges after each update.
+The `refresh-all` endpoint streams `resource_updated` events and, if a resource fails, a `resource_failed` event. It requests one cache purge per site after the batch, including if it fails after saving some resources, and streams a `cache_purge` event with each site's `success` and `message`. The `completed` event also includes these results for compatibility. Successful requests consistently report `Cache purge requested.`, confirming the site accepted the request, not that the cache was cleared. Individual resource updates continue to request purges after each update.
 
 ## Tests
 

@@ -57,7 +57,7 @@ test('refresh all reports each site purge after saving resources', function () {
         ]);
         Http::preventStrayRequests();
         Http::fake([
-            'https://hub.example.test/purge' => Http::response(['success' => true, 'message' => 'Cache purged for Hub']),
+            'https://hub.example.test/purge' => Http::response(['success' => true]),
             'https://porcelain.example.test/purge' => Http::response('Server error', 500),
             'https://tailor.example.test/purge' => Http::response(['success' => true, 'message' => 'Cache purged for Tailor Made']),
         ]);
@@ -77,9 +77,9 @@ test('refresh all reports each site purge after saving resources', function () {
             'event' => 'completed',
             'success' => true,
             'cache_purge' => [
-                'hub' => ['success' => true, 'message' => 'Cache purged for Hub'],
+                'hub' => ['success' => true, 'message' => 'Cache purge requested.'],
                 'porcelain-tiles' => ['success' => false, 'message' => 'Cache purge returned HTTP 500.'],
-                'tailor-made' => ['success' => true, 'message' => 'Cache purged for Tailor Made'],
+                'tailor-made' => ['success' => true, 'message' => 'Cache purge requested.'],
             ],
         ]);
         expect($events)->toHaveCount(16)

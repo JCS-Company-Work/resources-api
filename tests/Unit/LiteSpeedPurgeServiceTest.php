@@ -31,7 +31,7 @@ class LiteSpeedPurgeServiceTest extends TestCase
 
         $result = (new LiteSpeedPurgeService)->purge();
 
-        $this->assertSame(['hub' => ['success' => true, 'message' => 'Cache purged for Hub']], $result);
+        $this->assertSame(['hub' => ['success' => true, 'message' => 'Cache purge requested.']], $result);
         Http::assertSentCount(1);
         Http::assertSent(fn (Request $request) => $request->method() === 'POST'
             && $request->url() === self::URL
@@ -107,7 +107,7 @@ class LiteSpeedPurgeServiceTest extends TestCase
 
         $this->assertSame([
             'hub' => ['success' => false, 'message' => 'Cache purge request failed. Check the application log.'],
-            'tailor-made' => ['success' => true, 'message' => 'Cache purged for Tailor Made'],
+            'tailor-made' => ['success' => true, 'message' => 'Cache purge requested.'],
         ], $result);
         Http::assertSentCount(2);
     }
@@ -118,7 +118,7 @@ class LiteSpeedPurgeServiceTest extends TestCase
         Http::fake([self::URL => Http::response(['success' => true])]);
 
         $this->assertSame(
-            ['hub' => ['success' => true, 'message' => null]],
+            ['hub' => ['success' => true, 'message' => 'Cache purge requested.']],
             (new LiteSpeedPurgeService)->purge()
         );
     }
