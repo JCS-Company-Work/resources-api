@@ -50,6 +50,67 @@ test('it rejects unsupported XML brands', function () {
         ->toThrow(InvalidArgumentException::class);
 });
 
+test('it builds legacy XML attributes from sheet fields rather than saved JSON', function () {
+    $xml = (new XmlResourceService)->generate('porcelain-tiles', [
+        [
+            'postID' => '41526',
+            'appearsOn' => 'porcelaintiles-tailormade',
+            'factoryColour' => 'Example',
+            'ppCollection' => 'TM12',
+            'ppRange' => 'Bookmatch',
+            'shade' => 'Grey',
+            'range' => 'Marble',
+            'thickness' => '12',
+            'rectified' => 'Yes',
+            'attributes' => ['attributes' => '{"category":"tm12tm20","tag":"other","thickness":"20mm"}'],
+        ],
+        [
+            'postID' => '41527',
+            'appearsOn' => 'porcelaintiles-tailormade',
+            'factoryColour' => 'Another',
+            'ppCollection' => 'TMGrip',
+            'ppRange' => 'Cemento',
+            'attributes' => ['attributes' => '{"rectified":"yes"}'],
+        ],
+    ]);
+    $document = new DOMDocument;
+    $document->loadXML($xml);
+    $colours = [];
+    foreach ($document->getElementsByTagName('colour') as $colour) {
+        $colours[$colour->getAttribute('id')] = $colour;
+    }
+
+    expect($colours['41526']->getAttribute('category'))->toBe('bookmatch tm12')
+        ->and($colours['41526']->getAttribute('tag'))->toBe('grey marble')
+        ->and($colours['41526']->getAttribute('thickness'))->toBe('12mm')
+        ->and($colours['41526']->getAttribute('rectified'))->toBe('yes')
+        ->and($colours['41527']->getAttribute('category'))->toBe('tmgrip cemento')
+        ->and($colours['41527']->getAttribute('tag'))->toBe('')
+        ->and($colours['41527']->getAttribute('thickness'))->toBe('mm')
+        ->and($colours['41527']->hasAttribute('rectified'))->toBeFalse();
+});
+
+test('it chooses attributes using legacy collection and range ordering', function () {
+    $xml = (new XmlResourceService)->generate('porcelain-tiles', [
+        ['postID' => '1', 'productCode' => '1', 'factoryColour' => 'First', 'appearsOn' => 'all', 'ppCollection' => 'TM6', 'ppRange' => 'Pietre'],
+        ['postID' => '2', 'productCode' => '2', 'factoryColour' => 'Shared', 'appearsOn' => 'all', 'ppCollection' => 'TMGrip', 'ppRange' => 'Cemento', 'thickness' => '20'],
+        ['postID' => '2', 'productCode' => '3', 'factoryColour' => 'Shared', 'appearsOn' => 'all', 'ppCollection' => 'TM6', 'ppRange' => 'Cemento', 'thickness' => '6'],
+        ['postID' => '3', 'productCode' => '4', 'factoryColour' => 'Range', 'appearsOn' => 'all', 'ppCollection' => 'TM6', 'ppRange' => 'Cemento', 'thickness' => '20'],
+        ['postID' => '3', 'productCode' => '5', 'factoryColour' => 'Range', 'appearsOn' => 'all', 'ppCollection' => 'TM6', 'ppRange' => 'Marmi', 'thickness' => '6'],
+    ]);
+    $document = new DOMDocument;
+    $document->loadXML($xml);
+    $colours = [];
+    foreach ($document->getElementsByTagName('colour') as $colour) {
+        $colours[$colour->getAttribute('id')] = $colour;
+    }
+
+    expect($colours['2']->getAttribute('category'))->toBe('tm6 cemento')
+        ->and($colours['2']->getAttribute('thickness'))->toBe('6mm')
+        ->and($colours['3']->getAttribute('category'))->toBe('tm6 marmi')
+        ->and($colours['3']->getAttribute('thickness'))->toBe('6mm');
+});
+
 test('it includes products assigned to standalone XML brands', function (string $brand, string $appearsOn) {
     $xml = (new XmlResourceService)->generate($brand, [
         [
@@ -65,14 +126,33 @@ test('it includes products assigned to standalone XML brands', function (string 
         ->and($document->getElementsByTagName('colour')->item(0)->getAttribute('id'))->toBe('100');
 })->with([
     'tailor-made' => ['tailor-made', 'tailormade'],
-    'porcelain-tiles' => ['porcelain-tiles', 'porcelaintiles'],
 ]);
+
+test('porcelain tiles XML excludes standalone rows while retaining shared rows', function () {
+    $xml = (new XmlResourceService)->generate('porcelain-tiles', [
+        ['postID' => '101', 'factoryColour' => 'Standalone', 'appearsOn' => 'porcelaintiles'],
+        ['postID' => '102', 'factoryColour' => 'Shared', 'appearsOn' => 'porcelaintiles-tailormade'],
+        ['postID' => '103', 'factoryColour' => 'All Brands', 'appearsOn' => 'all'],
+        ['postID' => '102', 'factoryColour' => 'Shared', 'appearsOn' => 'porcelaintiles', 'finish' => 'Excluded Finish'],
+    ]);
+    $document = new DOMDocument;
+    $document->loadXML($xml);
+
+    $ids = [];
+    foreach ($document->getElementsByTagName('colour') as $colour) {
+        $ids[] = $colour->getAttribute('id');
+    }
+
+    sort($ids);
+    expect($ids)->toBe(['102', '103'])
+        ->and($xml)->not->toContain('Excluded Finish');
+});
 
 test('it sanitizes finish names before creating XML size elements', function () {
     $xml = (new XmlResourceService)->generate('porcelain-tiles', [
         [
             'postID' => '101',
-            'appearsOn' => 'porcelaintiles',
+            'appearsOn' => 'porcelaintiles-tailormade',
             'factoryColour' => 'Factory Colour',
             'factorySurface' => 'Natural & R10',
             'size' => '600 x 1200 x 9.5',

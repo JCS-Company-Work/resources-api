@@ -9,24 +9,36 @@ use RuntimeException;
 
 class XmlResourceService
 {
+    /**
+     * Supported brands and their corresponding XML files.
+     */
     public const BRAND_FILES = [
         'platform-plus' => 'platform-plus.xml',
         'tailor-made' => 'tailor-made.xml',
         'porcelain-tiles' => 'porcelain-tiles.xml',
     ];
 
+    /**
+     * Brands and the contexts in which they appear.
+     */
     private const BRAND_APPEARS_ON = [
         'platform-plus' => ['all', 'platformplus', 'platformplus-tailormade'],
         'tailor-made' => ['all', 'tailormade', 'platformplus-tailormade', 'porcelaintiles-tailormade'],
-        'porcelain-tiles' => ['all', 'porcelaintiles', 'porcelaintiles-tailormade'],
+        'porcelain-tiles' => ['all', 'porcelaintiles-tailormade'],
     ];
 
+    /**
+     * Base URLs for ambient resources for each brand.
+     */
     private const AMBIENT_BASE_URLS = [
         'platform-plus' => 'https://tailormade.uk/wp-content/uploads/',
         'tailor-made' => 'https://tailormade.uk/wp-content/uploads/',
         'porcelain-tiles' => 'https://porcelain-tiles.co.uk/wp-content/uploads/',
     ];
 
+    /**
+     * TM6 range order for sorting products.
+     */
     private const TM6_RANGE_ORDER = ['marmi', 'onici', 'precious', 'pietre', 'cemento', 'metalli'];
 
     /**
@@ -39,8 +51,10 @@ class XmlResourceService
         $this->assertSupportedBrand($brand);
 
         $products = [];
+        $attributeGroups = [];
 
         foreach ($rows as $row) {
+            $sourceRow = $row;
             $row = $this->mergeAttributeData($row);
 
             if (! $this->belongsToBrand($brand, $row)) {
@@ -54,9 +68,18 @@ class XmlResourceService
                 continue;
             }
 
-            $products[$factoryColour.'-'.$postId][] = $row;
+            $productKey = $factoryColour.'-'.$postId;
+            $products[$productKey][] = $row;
+            $collection = (string) $this->value($sourceRow, 'ppCollection');
+            $range = (string) $this->value($sourceRow, 'ppRange');
+            $attributeGroups[$collection][$range][] = [
+                'source' => array_diff_key($sourceRow, ['attributes' => true]),
+                'productKey' => $productKey,
+                'row' => $row,
+            ];
         }
 
+        $attributeRows = $this->legacyAttributeRows($attributeGroups);
         $products = array_values($products);
         usort($products, fn (array $left, array $right): int => $this->compareProducts($left[0], $right[0]));
 
@@ -66,7 +89,8 @@ class XmlResourceService
         $document->appendChild($root);
 
         foreach ($products as $productRows) {
-            $root->appendChild($this->createColourNode($document, $brand, $productRows));
+            $productKey = (string) $this->value($productRows[0], 'factoryColour').'-'.(string) $this->value($productRows[0], 'postID');
+            $root->appendChild($this->createColourNode($document, $brand, $productRows, $attributeRows[$productKey] ?? $productRows[0]));
         }
 
         $xml = $document->saveXML();
@@ -78,11 +102,21 @@ class XmlResourceService
         return $xml;
     }
 
+    /**
+     * Determine if the service supports a given brand.
+     * @param  string  $brand
+     * @return bool
+     */
     public function supports(string $brand): bool
     {
         return array_key_exists($brand, self::BRAND_FILES);
     }
 
+    /**
+     * Get the resource path for a given brand.
+     * @param  string  $brand
+     * @return string
+     */
     public function resourcePath(string $brand): string
     {
         $this->assertSupportedBrand($brand);
@@ -91,7 +125,10 @@ class XmlResourceService
     }
 
     /**
-     * @param  array<string, mixed>  $productRows
+     * Determine if a row belongs to a given brand.
+     * @param  string  $brand
+     * @param  array<string, mixed>  $row
+     * @return bool
      */
     private function belongsToBrand(string $brand, array $row): bool
     {
@@ -105,6 +142,7 @@ class XmlResourceService
     }
 
     /**
+     * Merge attribute data into the row.
      * @param  array<string, mixed>  $row
      * @return array<string, mixed>
      */
@@ -120,13 +158,58 @@ class XmlResourceService
     }
 
     /**
-     * @param  array<int, array<string, mixed>>  $rows
+     * @param  array<string, array<string, array<int, array{source: array<string, mixed>, productKey: string, row: array<string, mixed>}>>>  $groups
+     * @return array<string, array<string, mixed>>
      */
-    private function createColourNode(DOMDocument $document, string $brand, array $rows): DOMElement
+    private function legacyAttributeRows(array $groups): array
+    {
+        $attributeRows = [];
+        $seenProductCodes = [];
+
+        foreach ($groups as $collection => $ranges) {
+            if ($collection === 'TM6') {
+                uksort($ranges, static function (string $left, string $right): int {
+                    $legacyRangeOrder = ['Marmi', 'Onici', 'Precious', 'Pietre', 'Cemento', 'Metalli'];
+
+                    return (int) array_search($left, $legacyRangeOrder) <=> (int) array_search($right, $legacyRangeOrder);
+                });
+            }
+
+            foreach ($ranges as $entries) {
+                $colours = array_map(fn (array $entry): string => (string) $this->value($entry['source'], 'factoryColour'), $entries);
+                $sourceRows = array_column($entries, 'source');
+                array_multisort($colours, SORT_ASC, $sourceRows, SORT_ASC, $entries);
+
+                foreach ($entries as $entry) {
+                    $productCode = (string) ($entry['source']['productCode'] ?? $entry['source']['product_code'] ?? '');
+                    if ($productCode !== '' && isset($seenProductCodes[$productCode])) {
+                        continue;
+                    }
+
+                    if ($productCode !== '') {
+                        $seenProductCodes[$productCode] = true;
+                    }
+                    $attributeRows[$entry['productKey']] ??= $entry['row'];
+                }
+            }
+        }
+
+        return $attributeRows;
+    }
+
+    /**
+     * Create a colour node for the given brand and rows.
+     * @param  DOMDocument  $document
+     * @param  string  $brand
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  array<string, mixed>  $attributeRow
+     * @return DOMElement
+     */
+    private function createColourNode(DOMDocument $document, string $brand, array $rows, array $attributeRow): DOMElement
     {
         $colour = $document->createElement('colour');
 
-        foreach ($this->attributes($rows[0]) as $name => $value) {
+        foreach ($this->attributes($attributeRow) as $name => $value) {
             $colour->setAttribute($name, $value);
         }
 
@@ -144,33 +227,29 @@ class XmlResourceService
     }
 
     /**
+     * Extract and normalize attribute data from the row.
      * @param  array<string, mixed>  $row
      * @return array<string, string>
      */
     private function attributes(array $row): array
     {
-        $attributes = [];
-        $rawAttributes = $this->value($row, 'attributes');
-
-        if (is_string($rawAttributes)) {
-            $decoded = json_decode($rawAttributes, true);
-
-            if (is_array($decoded)) {
-                $attributes = $decoded;
-            }
-        }
-
-        $attributes['category'] ??= strtolower(trim(
+        $category = strtolower(trim(
             (string) $this->value($row, 'ppCollection').' '.(string) $this->value($row, 'ppRange')
         ));
-        $attributes['tag'] ??= strtolower(trim(
-            (string) $this->value($row, 'shade').' '.(string) $this->value($row, 'range')
-        ));
 
-        $thickness = trim((string) $this->value($row, 'thickness'));
-        $attributes['thickness'] ??= strtolower($thickness === '' || str_ends_with(strtolower($thickness), 'mm')
-            ? $thickness
-            : $thickness.'mm');
+        if (str_contains($category, 'bookmatch')) {
+            $categories = explode(' ', $category);
+            $bookmatchPosition = array_search('bookmatch', $categories);
+            unset($categories[$bookmatchPosition]);
+            array_unshift($categories, 'bookmatch');
+            $category = implode(' ', $categories);
+        }
+
+        $attributes = [
+            'category' => $category,
+            'tag' => strtolower(trim((string) $this->value($row, 'shade').' '.(string) $this->value($row, 'range'))),
+            'thickness' => strtolower(trim((string) $this->value($row, 'thickness').'mm')),
+        ];
 
         if (strtolower((string) $this->value($row, 'rectified')) === 'yes') {
             $attributes['rectified'] = 'yes';
@@ -178,13 +257,13 @@ class XmlResourceService
 
         $attributes['id'] = (string) $this->value($row, 'postID');
 
-        return array_map(
-            static fn (mixed $value): string => is_scalar($value) ? (string) $value : '',
-            array_intersect_key($attributes, array_flip(['category', 'tag', 'thickness', 'rectified', 'id']))
-        );
+        return $attributes;
     }
 
     /**
+     * Append title nodes to the colour element based on the rows.
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $colour
      * @param  array<int, array<string, mixed>>  $rows
      */
     private function appendTitles(DOMDocument $document, DOMElement $colour, array $rows): void
@@ -229,6 +308,9 @@ class XmlResourceService
     }
 
     /**
+     * Append finish nodes to the colour element based on the rows.
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $colour
      * @param  array<int, array<string, mixed>>  $rows
      */
     private function appendFinishes(DOMDocument $document, DOMElement $colour, array $rows): void
@@ -273,6 +355,9 @@ class XmlResourceService
     }
 
     /**
+     * Append size nodes to the colour element based on the rows.
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $colour
      * @param  array<int, array<string, mixed>>  $rows
      */
     private function appendSizes(DOMDocument $document, DOMElement $colour, array $rows): void
@@ -323,6 +408,10 @@ class XmlResourceService
     }
 
     /**
+     * Append ambient nodes to the colour element based on the rows.
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $colour
+     * @param  string  $brand
      * @param  array<int, array<string, mixed>>  $rows
      */
     private function appendAlternateColours(DOMDocument $document, DOMElement $colour, array $rows): void
@@ -343,7 +432,13 @@ class XmlResourceService
     }
 
     /**
+     * Append image nodes to the colour element based on the rows.
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $colour
      * @param  array<int, array<string, mixed>>  $rows
+     * @param  string  $field
+     * @param  string  $childName
+     * @param  int  $formatIndex
      */
     private function appendImages(
         DOMDocument $document,
@@ -400,6 +495,9 @@ class XmlResourceService
     }
 
     /**
+     * Append finish size nodes to the colour element based on the rows.
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $colour
      * @param  array<int, array<string, mixed>>  $rows
      */
     private function appendFinishSizes(DOMDocument $document, DOMElement $colour, array $rows): void
@@ -428,6 +526,11 @@ class XmlResourceService
         }
     }
 
+    /**
+     * Generate a valid element name for a finish size.
+     * @param  string  $finish
+     * @return string
+     */
     private function finishSizeElementName(string $finish): string
     {
         $name = 'sizes_'.preg_replace('/[\s-]+/', '_', strtolower(trim($finish)));
@@ -438,6 +541,10 @@ class XmlResourceService
     }
 
     /**
+     * @param  array<string, string>  $sizes
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $parent
+     * @param  string  $name
      * @param  array<string, string>  $sizes
      */
     private function appendSizeNodes(DOMDocument $document, DOMElement $parent, string $name, array $sizes): void
@@ -457,6 +564,8 @@ class XmlResourceService
     }
 
     /**
+     * Parse image data from a string value.
+     * @param  mixed  $value
      * @return array<int, array<string, array{url: string, size: string}>>
      */
     private function imageData(mixed $value): array
@@ -483,6 +592,8 @@ class XmlResourceService
 
     /**
      * @param  array<string, mixed>  $row
+     * @param  string  $key
+     * @return mixed
      */
     private function value(array $row, string $key): mixed
     {
@@ -511,7 +622,9 @@ class XmlResourceService
     }
 
     /**
-     * @param  array<string, mixed>  $row
+     * @param  array<string, mixed>  $left
+     * @param  array<string, mixed>  $right
+     * @return int
      */
     private function compareProducts(array $left, array $right): int
     {
@@ -541,6 +654,12 @@ class XmlResourceService
         ];
     }
 
+    /**
+     * Compare two size strings.
+     * @param  string  $left
+     * @param  string  $right
+     * @return int
+     */
     private function compareSizes(string $left, string $right): int
     {
         $leftNumeric = $this->extractNumeric($left);
@@ -551,6 +670,11 @@ class XmlResourceService
             : $rightNumeric <=> $leftNumeric;
     }
 
+    /**
+     * Extract the numeric part of a size string.
+     * @param  string  $value
+     * @return float
+     */
     private function extractNumeric(string $value): float
     {
         preg_match_all('/\d+(?:\.\d+)?/', $value, $matches);
@@ -558,6 +682,11 @@ class XmlResourceService
         return $matches[0] === [] ? 0.0 : max(array_map('floatval', $matches[0]));
     }
 
+    /**
+     * Format a size string.
+     * @param  string  $size
+     * @return string
+     */
     private function formatSize(string $size): string
     {
         if ($size === '') {
@@ -572,6 +701,14 @@ class XmlResourceService
         return implode(' x ', $dimensions);
     }
 
+    /**
+     * Append a text element to a parent element.
+     * @param  DOMDocument  $document
+     * @param  DOMElement  $parent
+     * @param  string  $name
+     * @param  string  $value
+     * @return DOMElement
+     */
     private function appendTextElement(DOMDocument $document, DOMElement $parent, string $name, string $value): DOMElement
     {
         $element = $document->createElement($name);
@@ -581,6 +718,12 @@ class XmlResourceService
         return $element;
     }
 
+    /**
+     * Assert that a brand is supported.
+     * @param  string  $brand
+     * @return void
+     * @throws InvalidArgumentException
+     */
     private function assertSupportedBrand(string $brand): void
     {
         if (! $this->supports($brand)) {
