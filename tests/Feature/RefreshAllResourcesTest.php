@@ -1,12 +1,13 @@
 <?php
 
 use App\Services\GoogleSheets\GoogleSheetsService;
-use App\Services\Resources\CombinedDataService;
-use App\Services\Resources\FlorimDataService;
-use App\Services\Resources\RefreshAllResourcesService;
-use App\Services\Resources\ResourceSaveService;
-use App\Services\Resources\SampleRequest\SampleRequestDataService;
-use App\Services\Resources\SampleRequest\SampleRequestFormatterService;
+use App\Services\Resources\Data\CombinedDataService;
+use App\Services\Resources\Data\FlorimDataService;
+use App\Services\Resources\Data\SampleRequestDataService;
+use App\Services\Resources\Data\XmlResourceService;
+use App\Services\Resources\Update\RefreshAllResourcesService;
+use App\Services\Resources\Update\ResourceSaveService;
+use App\Services\Resources\Update\SampleRequestFormatterService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -64,6 +65,7 @@ test('refresh all reports each site purge after saving resources', function () {
         $this->mock(GoogleSheetsService::class, function ($mock) {
             $mock->shouldReceive('getRows')->once()->withNoArgs()->andReturn([]);
             $mock->shouldReceive('getRows')->once()->with('sample-request')->andReturn([]);
+            $mock->shouldReceive('getRows')->once()->with('xml')->andReturn([]);
         });
 
         $response = $this->withApiToken('resource_api')->putJson('/api/resources/refresh-all');
@@ -82,7 +84,7 @@ test('refresh all reports each site purge after saving resources', function () {
                 'tailor-made' => ['success' => true, 'message' => 'Cache purge requested.'],
             ],
         ]);
-        expect($events)->toHaveCount(16)
+        expect($events)->toHaveCount(19)
             ->and($events[count($events) - 2])->toMatchArray([
                 'event' => 'cache_purge',
                 'cache_purge' => end($events)['cache_purge'],
@@ -149,10 +151,12 @@ test('it refreshes all generated resources from one sheets request', function ()
         ['productCode' => 'E', 'postID' => '7', 'appearsOn' => 'all', 'range' => 'Anima', 'ppCollection' => 'Excluded', 'pendingItem' => 'yes'],
     ];
     $sampleRequestRows = [['productCode' => 'CINDER', 'attributes' => [], 'picklistLocations' => []]];
+    $xmlRows = [['productCode' => 'CINDER', 'postID' => '1', 'attributes' => []]];
 
-    $this->mock(GoogleSheetsService::class, function ($mock) use ($standardRows, $sampleRequestRows) {
+    $this->mock(GoogleSheetsService::class, function ($mock) use ($standardRows, $sampleRequestRows, $xmlRows) {
         $mock->shouldReceive('getRows')->once()->withNoArgs()->andReturn($standardRows);
         $mock->shouldReceive('getRows')->once()->with('sample-request')->andReturn($sampleRequestRows);
+        $mock->shouldReceive('getRows')->once()->with('xml')->andReturn($xmlRows);
     });
     $this->mock(CombinedDataService::class, function ($mock) use ($standardRows) {
         $mock->shouldReceive('createCombinedData')->twice()->withArgs(
@@ -184,10 +188,20 @@ test('it refreshes all generated resources from one sheets request', function ()
             }
         );
     });
+    $this->mock(XmlResourceService::class, function ($mock) use ($xmlRows) {
+        $mock->shouldReceive('generate')->times(3)->withArgs(
+            fn (string $brand, array $receivedRows): bool => in_array(
+                $brand,
+                ['platform-plus', 'tailor-made', 'porcelain-tiles'],
+                true
+            ) && $receivedRows === $xmlRows
+        )->andReturn('<?xml version="1.0" encoding="UTF-8"?><colours/>');
+    });
     $filterPanels = [];
     $referenceData = [];
     $updated = [];
-    $this->mock(ResourceSaveService::class, function ($mock) use (&$filterPanels, &$referenceData, &$updated) {
+    $xmlFiles = [];
+    $this->mock(ResourceSaveService::class, function ($mock) use (&$filterPanels, &$referenceData, &$updated, &$xmlFiles) {
         $mock->shouldReceive('saveResource')->times(16)->andReturnUsing(
             function (string $filename, string $path, array $data, bool $purgeCache) use (&$filterPanels, &$referenceData): void {
                 expect($purgeCache)->toBeFalse();
@@ -200,9 +214,17 @@ test('it refreshes all generated resources from one sheets request', function ()
                 }
             }
         );
+        $mock->shouldReceive('saveXmlResource')->times(3)->andReturnUsing(
+            function (string $filename, string $path, string $xml) use (&$xmlFiles): void {
+                expect($path)->toBe('app/private/xml/')
+                    ->and($xml)->toBe('<?xml version="1.0" encoding="UTF-8"?><colours/>');
+
+                $xmlFiles[] = $filename;
+            }
+        );
         $mock->shouldReceive('purge')->once()->with('refresh-all')->andReturnUsing(
             function () use (&$updated): array {
-                expect($updated)->toHaveCount(16);
+                expect($updated)->toHaveCount(19);
 
                 return [];
             }
@@ -216,11 +238,15 @@ test('it refreshes all generated resources from one sheets request', function ()
     );
 
     expect($result['success'])->toBeTrue()
-        ->and($updated)->toHaveCount(16)
+        ->and($updated)->toHaveCount(19)
         ->and($updated)->toContain('florimuk/florimuk')
         ->and($updated)->toContain('samples-tool/emilgroup')
         ->and($updated)->toContain('samples-tool/tm exclusive')
         ->and($updated)->toContain('product-finder/tailormade/filter-panel')
+        ->and($updated)->toContain('xml/porcelain-tiles')
+        ->and($updated)->toContain('xml/tailor-made')
+        ->and($updated)->toContain('xml/platform-plus')
+        ->and($xmlFiles)->toBe(['platform-plus.xml', 'tailor-made.xml', 'porcelain-tiles.xml'])
         ->and(array_column($filterPanels['app/private/product-finder/porcelaintiles/']['Range']['filters'], 'label'))
         ->toBe(['Anima', 'Onyx Sense'])
         ->and(array_column($filterPanels['app/private/product-finder/tailormade/']['Range']['filters'], 'label'))

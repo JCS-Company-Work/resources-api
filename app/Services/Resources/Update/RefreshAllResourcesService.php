@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Services\Resources;
+namespace App\Services\Resources\Update;
 
 use App\Services\GoogleSheets\GoogleSheetsService;
-use App\Services\Resources\SampleRequest\SampleRequestDataService;
-use App\Services\Resources\SampleRequest\SampleRequestFormatterService;
+use App\Services\Resources\Data\CombinedDataService;
+use App\Services\Resources\Data\FlorimDataService;
+use App\Services\Resources\Data\ProductFinderDataService;
+use App\Services\Resources\Data\SampleRequestDataService;
+use App\Services\Resources\Data\XmlResourceService;
 use Illuminate\Support\Facades\Cache;
 use RuntimeException;
 use Throwable;
@@ -21,11 +24,12 @@ class RefreshAllResourcesService
         private SampleRequestDataService $sampleRequestDataService,
         private SampleRequestFormatterService $sampleRequestFormatterService,
         private ProductFinderDataService $productFinderDataService,
+        private XmlResourceService $xmlResourceService,
         private ResourceSaveService $resourceSaveService
     ) {}
 
     /**
-     * Refresh resources from shared sheet data and purge once after any saves.
+     * Refresh JSON and XML resources from shared sheet data and purge once after any saves.
      *
      * A failed refresh stops further updates, but still purges after partial saves.
      * Refresh success does not imply purge success; check each site's result.
@@ -70,6 +74,7 @@ class RefreshAllResourcesService
             $this->refreshFlorim($standardRows, $stored, $currentResource, $onResourceSaved);
             $this->refreshSamples($sampleRequestRows, $stored, $currentResource, $onResourceSaved);
             $this->refreshProductFinder($standardRows, $stored, $currentResource, $onResourceSaved);
+            $this->refreshXml($stored, $currentResource, $onResourceSaved);
 
         } catch (Throwable $exception) {
 
@@ -223,6 +228,33 @@ class RefreshAllResourcesService
                     $data,
                     $onResourceSaved
                 );
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, bool>  $stored
+     * @param  (callable(string): void)|null  $onResourceSaved
+     */
+    private function refreshXml(array &$stored, ?string &$currentResource, ?callable $onResourceSaved): void
+    {
+        $currentResource = 'xml/colours';
+        $rows = $this->googleSheetsService->getRows('xml');
+
+        foreach (XmlResourceService::BRAND_FILES as $brand => $filename) {
+            $resource = 'xml/'.pathinfo($filename, PATHINFO_FILENAME);
+            $currentResource = $resource;
+
+            $this->resourceSaveService->saveXmlResource(
+                $filename,
+                'app/private/xml/',
+                $this->xmlResourceService->generate($brand, $rows)
+            );
+
+            $stored[$resource] = true;
+
+            if ($onResourceSaved !== null) {
+                $onResourceSaved($resource);
             }
         }
     }

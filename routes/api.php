@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\RefreshAllResourcesController;
 use App\Http\Controllers\Api\ResourceUploadController;
 use App\Http\Controllers\Api\SampleRequestController;
 use App\Http\Controllers\Api\TMColoursController;
+use App\Http\Controllers\Api\XmlResourceController;
 use App\Http\Middleware\VerifyApiToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -26,9 +27,15 @@ Route::middleware(VerifyApiToken::using('combined_data_api'))->group(function ()
     Route::put('/resources/combined-data/{filename}', [CombinedDataController::class, 'update']);
 });
 
+// Refresh all resources route
 Route::put('/resources/refresh-all', RefreshAllResourcesController::class)
     ->middleware(VerifyApiToken::using('resource_api'));
 
+// XML resource routes
+Route::get('/xml/{brand}', [XmlResourceController::class, 'show'])
+    ->middleware(VerifyApiToken::using('resource_api'));
+
+// Live data route that bypasses our generated files and serves live Google Sheets data
 Route::get('/live-data', LiveDataController::class)
     ->middleware(VerifyApiToken::using('live_data_api'));
 

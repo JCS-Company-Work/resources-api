@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Services\Resources\RefreshAllResourcesService;
+use App\Services\Resources\Update\RefreshAllResourcesService;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;

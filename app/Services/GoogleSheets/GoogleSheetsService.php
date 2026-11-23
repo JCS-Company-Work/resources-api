@@ -80,12 +80,19 @@ class GoogleSheetsService
                 'attributes' => config('services.google_sheets.attributes_range'),
                 'locations' => config('services.google_sheets.locations_range'),
             ];
+        } elseif ($tool_type === 'xml') {
+            $extraRanges = [
+                'attributes' => config('services.google_sheets.xml_attributes_range'),
+            ];
         }
 
         // Fetch the main range and any extra ranges in a single API request
+        $range = $tool_type === 'xml'
+            ? config('services.google_sheets.xml_range')
+            : config('services.google_sheets.range');
         $response = $this->service->spreadsheets_values->batchGet(
             config('services.google_sheets.spreadsheet_id'),
-            ['ranges' => array_merge([config('services.google_sheets.range')], array_values($extraRanges))]
+            ['ranges' => array_merge([$range], array_values($extraRanges))]
         );
 
         $valueRanges = $response->getValueRanges();
@@ -105,7 +112,10 @@ class GoogleSheetsService
 
         // Attach extra range data if available
         if ($extraRanges !== []) {
-            $combined_data = $this->attachRangeData($combined_data, array_slice($valueRanges, 1));
+            $extraValueRanges = array_slice($valueRanges, 1);
+            $combined_data = $tool_type === 'xml'
+                ? $this->attachXmlAttributeData($combined_data, $extraValueRanges)
+                : $this->attachRangeData($combined_data, $extraValueRanges);
         }
 
         return $combined_data;
@@ -166,6 +176,55 @@ class GoogleSheetsService
         unset($product);
 
         return $products;
+    }
+
+    /**
+     * Attach legacy XML attribute data to each product, matched on postID.
+     *
+     * @param  array<int, array<string, mixed>>  $products
+     * @param  array<int, ValueRange>  $valueRanges
+     * @return array<int, array<string, mixed>>
+     */
+    protected function attachXmlAttributeData(array $products, array $valueRanges): array
+    {
+        $attributes = $this->formatXmlAttributes($valueRanges[0]->getValues() ?? []);
+
+        foreach ($products as &$product) {
+            $postId = $product['postID'] ?? '';
+            $product['attributes'] = $attributes[$postId] ?? [];
+        }
+
+        unset($product);
+
+        return $products;
+    }
+
+    /**
+     * Preserve the XML generator's source fields, including the raw attributes JSON.
+     *
+     * @param  array<int, array<int, string>>  $values
+     * @return array<string, array<string, string>>
+     */
+    protected function formatXmlAttributes(array $values): array
+    {
+        if ($values === []) {
+            return [];
+        }
+
+        $headers = $this->formatKeyNames(array_shift($values));
+        $result = [];
+
+        foreach ($values as $row) {
+            $item = array_combine($headers, array_slice(array_pad($row, count($headers), ''), 0, count($headers)));
+            $id = (string) ($item['id'] ?? '');
+            unset($item['id'], $item['dataEnd']);
+
+            if ($id !== '') {
+                $result[$id] = $item;
+            }
+        }
+
+        return $result;
     }
 
     /**

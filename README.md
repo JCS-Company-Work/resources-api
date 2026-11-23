@@ -39,7 +39,7 @@ Configure a distinct token for each API client:
 | `SAMPLES_API_TOKEN` | Sample request data |
 | `PRODUCT_FINDER_API_TOKEN` | Product Finder data |
 | `TM_COLOURS_API_TOKEN` | TM Colours data |
-| `RESOURCE_API_TOKEN` | Legacy JSON resource upload endpoints |
+| `RESOURCE_API_TOKEN` | Resource refresh, XML reads, and legacy JSON uploads |
 
 Send tokens in the `X-API-Token` request header.
 
@@ -51,6 +51,8 @@ Live data and combined-data generation also require:
 | `GOOGLE_SHEETS_SPREADSHEET_ID` | Source spreadsheet ID |
 | `GOOGLE_SHEETS_RANGE` | Sheet range to read |
 | `GOOGLE_SHEETS_CREDENTIALS` | Credentials JSON path relative to `storage/app/` |
+| `GOOGLE_SHEETS_XML_RANGE` | Legacy XML sheet range (defaults to `standard`) |
+| `GOOGLE_SHEETS_XML_ATTRIBUTES_RANGE` | Legacy XML attributes range (defaults to `Attributes`) |
 
 LiteSpeed cache purge endpoints are configured per site:
 
@@ -93,6 +95,7 @@ Generated files are stored under `storage/app/private/combined-data/`.
 | Method | Path | Token |
 | --- | --- | --- |
 | `GET` | `/api/live-data` | `LIVE_DATA_TOKEN` |
+| `GET` | `/api/xml/{brand}` | `RESOURCE_API_TOKEN` |
 | `GET` | `/api/florimuk` | `FLORIMUK_API_TOKEN` |
 | `GET` | `/api/sample-request/{brand}` | `SAMPLES_API_TOKEN` |
 | `GET` | `/api/product-finder/all` | `PRODUCT_FINDER_API_TOKEN` |
@@ -105,6 +108,8 @@ Generated files are stored under `storage/app/private/combined-data/`.
 
 `GET /api/live-data` fetches the configured standard Google Sheets range on every request. It returns the existing service's processed rows, including their fields, and skips rows without a product code. Its response is not cached.
 
+The XML endpoints serve the most recently generated resource with `Content-Type: application/xml`. Use `platform-plus`, `tailor-made`, or `porcelain-tiles` as the brand; their files are named `platform-plus.xml`, `tailor-made.xml`, and `porcelain-tiles.xml`. `/api/resources/refresh-all` regenerates their XML files alongside the JSON resources.
+
 ### Legacy resource uploads
 
 The JSON upload endpoints remain available during migration to generated resources. They accept JSON request bodies and use `RESOURCE_API_TOKEN`:
@@ -114,7 +119,7 @@ The JSON upload endpoints remain available during migration to generated resourc
 
 ## Resource files and caching
 
-JSON resources are stored in private local storage, under `storage/app/private/`. Reads are cached for 30 days. Resource generation clears the matching resource cache after writing the new file.
+JSON and XML resources are stored in private local storage, under `storage/app/private/`. JSON reads are cached for 30 days. XML endpoints serve the generated XML files directly; refresh-all updates them from the configured XML ranges alongside the JSON resources.
 
 The `refresh-all` endpoint streams `resource_updated` events and, if a resource fails, a `resource_failed` event. It requests one cache purge per site after the batch, including if it fails after saving some resources, and streams a `cache_purge` event with each site's `success` and `message`. The `completed` event also includes these results for compatibility. Successful requests consistently report `Cache purge requested.`, confirming the site accepted the request, not that the cache was cleared. Individual resource updates continue to request purges after each update.
 

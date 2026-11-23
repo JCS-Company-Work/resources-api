@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Resources;
+namespace App\Services\Resources\Data;
 
 use InvalidArgumentException;
 

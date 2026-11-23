@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Resources\SampleRequest;
+namespace App\Services\Resources\Update;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;

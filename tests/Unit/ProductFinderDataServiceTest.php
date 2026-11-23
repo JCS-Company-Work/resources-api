@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\Resources\ProductFinderDataService;
+use App\Services\Resources\Data\ProductFinderDataService;
 
 function productFinderRow(array $overrides = []): array
 {

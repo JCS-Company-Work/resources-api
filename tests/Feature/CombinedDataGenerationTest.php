@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Services\GoogleSheets\GoogleSheetsService;
 use App\Services\LiteSpeedPurgeService;
-use App\Services\Resources\CombinedDataService;
+use App\Services\Resources\Data\CombinedDataService;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
 

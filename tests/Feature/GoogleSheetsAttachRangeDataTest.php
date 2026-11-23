@@ -57,6 +57,38 @@ class GoogleSheetsAttachRangeDataTest extends TestCase
         $this->assertSame([['productCode' => 'SKU-1']], $service->getRows());
     }
 
+    public function test_it_reads_the_legacy_xml_ranges_and_attaches_attribute_rows(): void
+    {
+        config([
+            'services.google_sheets.spreadsheet_id' => 'spreadsheet-id',
+            'services.google_sheets.xml_range' => 'standard-xml',
+            'services.google_sheets.xml_attributes_range' => 'Attributes',
+        ]);
+        $response = new BatchGetValuesResponse;
+        $response->setValueRanges([
+            $this->valueRange([['Product_Code', 'Post_ID'], ['SKU-1', '100']]),
+            $this->valueRange([['ID', 'Attributes', 'Title'], ['100', '{"category":"stone","tag":"grey"}', 'Cinder']]),
+        ]);
+
+        $values = Mockery::mock();
+        $values->shouldReceive('batchGet')
+            ->once()
+            ->with('spreadsheet-id', ['ranges' => ['standard-xml', 'Attributes']])
+            ->andReturn($response);
+        $sheets = (new ReflectionClass(Sheets::class))->newInstanceWithoutConstructor();
+        $sheets->spreadsheets_values = $values;
+
+        $service = (new ReflectionClass(GoogleSheetsService::class))->newInstanceWithoutConstructor();
+        (new ReflectionClass($service))->getProperty('service')->setValue($service, $sheets);
+
+        $rows = $service->getRows('xml');
+
+        $this->assertSame([
+            'attributes' => '{"category":"stone","tag":"grey"}',
+            'title' => 'Cinder',
+        ], $rows[0]['attributes']);
+    }
+
     private function valueRange(array $values): ValueRange
     {
         $range = new ValueRange;

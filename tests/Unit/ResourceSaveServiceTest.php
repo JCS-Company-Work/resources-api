@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\LiteSpeedPurgeService;
-use App\Services\Resources\ResourceSaveService;
+use App\Services\Resources\Update\ResourceSaveService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;

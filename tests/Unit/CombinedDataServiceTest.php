@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\Resources\CombinedDataService;
+use App\Services\Resources\Data\CombinedDataService;
 use PHPUnit\Framework\TestCase;
 
 class CombinedDataServiceTest extends TestCase

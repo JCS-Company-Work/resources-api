@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\Resources\SampleRequest\SampleRequestFormatterService;
+use App\Services\Resources\Update\SampleRequestFormatterService;
 
 function ptTile(array $overrides = []): array
 {

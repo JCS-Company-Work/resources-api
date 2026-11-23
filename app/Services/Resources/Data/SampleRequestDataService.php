@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Resources\SampleRequest;
+namespace App\Services\Resources\Data;
 
 class SampleRequestDataService
 {
