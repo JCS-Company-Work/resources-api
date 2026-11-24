@@ -133,6 +133,45 @@ test('it orders colours by legacy collection and range order', function () {
     expect($ids)->toBe(['5', '4', '1', '6', '2', '3', '7']);
 });
 
+test('it orders finishes and uses the legacy finish ratings and mappings', function () {
+    $rows = [
+        ['postID' => '1', 'productCode' => 'A', 'factoryColour' => 'Example', 'appearsOn' => 'all', 'factorySurface' => 'Matte', 'finish' => 'Natural', 'rRating' => 'R9'],
+        ['postID' => '1', 'productCode' => 'B', 'factoryColour' => 'Example', 'appearsOn' => 'all', 'factorySurface' => 'Matte', 'finish' => 'Alternative', 'rRating' => 'R10'],
+        ['postID' => '1', 'productCode' => 'C', 'factoryColour' => 'Example', 'appearsOn' => 'all', 'factorySurface' => 'High-Glossy', 'finish' => 'Polished'],
+        ['postID' => '2', 'productCode' => 'D', 'factoryColour' => 'Single', 'appearsOn' => 'all', 'factorySurface' => 'Matte', 'finish' => 'Natural', 'rRating' => 'R9'],
+    ];
+
+    $document = new DOMDocument;
+    $document->loadXML((new XmlResourceService)->generate('platform-plus', $rows));
+    $xpath = new DOMXPath($document);
+    $multi = $xpath->query('//colour[@id="1"]/finishes/finish');
+    $single = $xpath->query('//colour[@id="2"]/finishes/finish')->item(0);
+
+    expect($multi->item(0)->textContent)->toBe('High-Glossy')
+        ->and($multi->item(1)->textContent)->toBe('Matte')
+        ->and($multi->item(1)->getAttribute('ptfinish'))->toBe('Natural')
+        ->and($multi->item(1)->getAttribute('r-rating'))->toBe('R10')
+        ->and($single->getAttribute('ptfinish'))->toBe('Natural')
+        ->and($single->hasAttribute('r-rating'))->toBeFalse();
+});
+
+test('it keeps distinct images without repeating images across product rows', function () {
+    $image = 'https://example.test/a.jpg,100x100,https://example.test/b.jpg,200x200';
+    $other = 'https://example.test/c.jpg,100x100,https://example.test/d.jpg,200x200';
+    $rows = [
+        ['postID' => '1', 'productCode' => 'A', 'factoryColour' => 'Example', 'appearsOn' => 'all', 'graphics' => $image],
+        ['postID' => '1', 'productCode' => 'B', 'factoryColour' => 'Example', 'appearsOn' => 'all', 'graphics' => $image.';'.$other],
+    ];
+
+    $document = new DOMDocument;
+    $document->loadXML((new XmlResourceService)->generate('platform-plus', $rows));
+    $graphics = $document->getElementsByTagName('graphic');
+
+    expect($graphics->length)->toBe(2)
+        ->and($graphics->item(0)->getElementsByTagName('url')->item(0)->textContent)->toBe('https://example.test/a.jpg')
+        ->and($graphics->item(1)->getElementsByTagName('url')->item(0)->textContent)->toBe('https://example.test/c.jpg');
+});
+
 test('it includes products assigned to standalone XML brands', function (string $brand, string $appearsOn) {
     $xml = (new XmlResourceService)->generate($brand, [
         [

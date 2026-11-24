@@ -74,11 +74,11 @@ class XmlResourceService
             ];
         }
 
-        $attributeRows = $this->legacyAttributeRows($attributeGroups);
+        $legacyRows = $this->legacyProductRows($attributeGroups);
         $orderedProducts = [];
-        foreach ($attributeRows as $productKey => $attributeRow) {
+        foreach ($legacyRows as $productKey => $productRows) {
             if (isset($products[$productKey])) {
-                $orderedProducts[$productKey] = $products[$productKey];
+                $orderedProducts[$productKey] = $productRows;
             }
         }
         $orderedProducts += $products;
@@ -89,7 +89,7 @@ class XmlResourceService
         $document->appendChild($root);
 
         foreach ($orderedProducts as $productKey => $productRows) {
-            $root->appendChild($this->createColourNode($document, $brand, $productRows, $attributeRows[$productKey] ?? $productRows[0]));
+            $root->appendChild($this->createColourNode($document, $brand, $productRows));
         }
 
         $xml = $document->saveXML();
@@ -158,11 +158,11 @@ class XmlResourceService
 
     /**
      * @param  array<string, array<string, array<int, array{source: array<string, mixed>, productKey: string, row: array<string, mixed>}>>>  $groups
-     * @return array<string, array<string, mixed>>
+     * @return array<string, array<int, array<string, mixed>>>
      */
-    private function legacyAttributeRows(array $groups): array
+    private function legacyProductRows(array $groups): array
     {
-        $attributeRows = [];
+        $productRows = [];
         $seenProductCodes = [];
 
         foreach ($groups as $collection => $ranges) {
@@ -188,12 +188,12 @@ class XmlResourceService
                     if ($productCode !== '') {
                         $seenProductCodes[$productCode] = true;
                     }
-                    $attributeRows[$entry['productKey']] ??= $entry['row'];
+                    $productRows[$entry['productKey']][] = $entry['row'];
                 }
             }
         }
 
-        return $attributeRows;
+        return $productRows;
     }
 
     /**
@@ -201,14 +201,13 @@ class XmlResourceService
      * @param  DOMDocument  $document
      * @param  string  $brand
      * @param  array<int, array<string, mixed>>  $rows
-     * @param  array<string, mixed>  $attributeRow
      * @return DOMElement
      */
-    private function createColourNode(DOMDocument $document, string $brand, array $rows, array $attributeRow): DOMElement
+    private function createColourNode(DOMDocument $document, string $brand, array $rows): DOMElement
     {
         $colour = $document->createElement('colour');
 
-        foreach ($this->attributes($attributeRow) as $name => $value) {
+        foreach ($this->attributes($rows[0]) as $name => $value) {
             $colour->setAttribute($name, $value);
         }
 
@@ -315,6 +314,8 @@ class XmlResourceService
     private function appendFinishes(DOMDocument $document, DOMElement $colour, array $rows): void
     {
         $finishes = [];
+        $ratings = [];
+        $ptFinishes = [];
 
         foreach ($rows as $row) {
             $sheetFinish = (string) $this->value($row, 'finish');
@@ -327,14 +328,20 @@ class XmlResourceService
                 continue;
             }
 
+            if ($factoryFinish !== '' && trim($sheetFinish) !== '') {
+                $ptFinishes[$factoryFinish] ??= trim($sheetFinish);
+            }
+            $rating = trim((string) $this->value($row, 'rRating'));
+            if ($rating !== '') {
+                $ratings[$finish] = $rating;
+            }
             $finishes[$finish] ??= [
                 'ptfinish' => (string) ($this->value($row, 'ptfinish') ?: $sheetFinish ?: $finish),
                 'factoryfinish' => $factoryFinish !== '' ? $factoryFinish : $finish,
-                'r-rating' => (string) $this->value($row, 'rRating'),
             ];
         }
 
-        asort($finishes);
+        ksort($finishes);
 
         if ($finishes === []) {
             return;
@@ -342,6 +349,12 @@ class XmlResourceService
 
         $finishesNode = $document->createElement('finishes');
         foreach ($finishes as $name => $attributes) {
+            if (count($finishes) > 1) {
+                $attributes['ptfinish'] = $ptFinishes[$name] ?? $name;
+                if (isset($ratings[$name])) {
+                    $attributes['r-rating'] = $ratings[$name];
+                }
+            }
             $finishNode = $this->appendTextElement($document, $finishesNode, 'finish', (string) $name);
 
             foreach ($attributes as $attribute => $value) {
@@ -451,7 +464,11 @@ class XmlResourceService
         $formats = [];
 
         foreach ($rows as $row) {
-            $images = [...$images, ...$this->imageData($this->value($row, $field))];
+            foreach ($this->imageData($this->value($row, $field)) as $image) {
+                if (! in_array($image, $images, true)) {
+                    $images[] = $image;
+                }
+            }
             $formatParts = explode(',', (string) $this->value($row, 'graphicsFormat'));
 
             if (isset($formatParts[$formatIndex]) && trim($formatParts[$formatIndex]) !== '') {
