@@ -45,13 +45,6 @@ Route::middleware(VerifyApiToken::using('florimuk'))->group(function () {
     Route::put('/florimuk', [FlorimDataController::class, 'updateFlorimData']);
 });
 
-// File upload resource routes
-Route::middleware(VerifyApiToken::using('resource_api'))
-    ->group(function () {
-        Route::put('/resources/{type}/{filename}', [ResourceUploadController::class, 'update']);
-        Route::put('/resources/product-finder/{brand}/{filename}', [ResourceUploadController::class, 'update']);
-    });
-
 // Product Finder routes
 Route::middleware(VerifyApiToken::using('product_finder_api'))
     ->prefix('product-finder')
