@@ -17,7 +17,7 @@ class GetDataService
 
         // Attempt to retrieve the products from the cache first
         return Cache::remember(
-            $filename,
+            self::cacheKey($filepath, $filename),
             now()->addDays(30),
 
             // If the cache does not have the products, read from the JSON file
@@ -35,5 +35,10 @@ class GetDataService
                 );
             }
         );
+    }
+
+    public static function cacheKey(string $filepath, string $filename): string
+    {
+        return rtrim($filepath, '/').'/'.$filename;
     }
 }

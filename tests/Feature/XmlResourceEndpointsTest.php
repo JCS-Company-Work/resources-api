@@ -7,7 +7,7 @@ test('it returns the saved XML resource for a brand', function (string $brand, s
     Storage::fake('local');
     Storage::disk('local')->put('xml/'.$filename, $xml);
 
-    $this->withApiToken('resource_api')
+    $this->withApiToken('xml')
         ->get('/api/xml/'.$brand)
         ->assertOk()
         ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
@@ -19,11 +19,12 @@ test('it returns the saved XML resource for a brand', function (string $brand, s
 ]);
 
 test('it returns 404 for an unsupported XML brand', function () {
-    $this->withApiToken('resource_api')
+    $this->withApiToken('xml')
         ->get('/api/xml/not-a-brand')
         ->assertNotFound();
 });
 
-test('it requires the resource API token for XML resources', function () {
+test('it requires the XML API token for XML resources', function () {
     $this->get('/api/xml/porcelain-tiles')->assertUnauthorized();
+    $this->withApiToken('resource_api')->get('/api/xml/porcelain-tiles')->assertUnauthorized();
 });

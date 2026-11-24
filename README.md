@@ -110,13 +110,6 @@ Generated files are stored under `storage/app/private/combined-data/`.
 
 The XML endpoints serve the most recently generated resource with `Content-Type: application/xml`. Use `platform-plus`, `tailor-made`, or `porcelain-tiles` as the brand; their files are named `platform-plus.xml`, `tailor-made.xml`, and `porcelain-tiles.xml`. `/api/resources/refresh-all` regenerates their XML files alongside the JSON resources.
 
-### Legacy resource uploads
-
-The JSON upload endpoints remain available during migration to generated resources. They accept JSON request bodies and use `RESOURCE_API_TOKEN`:
-
-- `PUT /api/resources/{type}/{filename}`
-- `PUT /api/resources/product-finder/{brand}/{filename}`
-
 ## Resource files and caching
 
 JSON and XML resources are stored in private local storage, under `storage/app/private/`. JSON reads are cached for 30 days. XML endpoints serve the generated XML files directly; refresh-all updates them from the configured XML ranges alongside the JSON resources.

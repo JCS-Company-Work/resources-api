@@ -18,7 +18,7 @@ class TMColoursController extends Controller
     {
 
         // Fetch filter panel data
-        $products = $dataService->getData('app/private/tailormade/', 'filter-panel');
+        $products = $dataService->getData('app/private/product-finder/tailormade/', 'filter-panel');
 
         return response()->json($products);
 
@@ -33,7 +33,7 @@ class TMColoursController extends Controller
     {
 
         // Fetch product data from the data service
-        $products = $dataService->getData('app/private/tailormade/', 'tile-filter-data');
+        $products = $dataService->getData('app/private/product-finder/tailormade/', 'tile-filter-data');
 
         return response()->json($products);
 
@@ -48,7 +48,7 @@ class TMColoursController extends Controller
     {
 
         // Fetch product reference data from the data service
-        $products = $dataService->getData('app/private/tailormade/', 'tile-filter-ref-data');
+        $products = $dataService->getData('app/private/product-finder/tailormade/', 'tile-filter-ref-data');
 
         return response()->json($products);
 

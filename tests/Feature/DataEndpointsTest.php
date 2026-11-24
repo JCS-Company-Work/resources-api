@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Services\GetDataService;
+use App\Services\Resources\Update\ResourceSaveService;
+use Illuminate\Support\Facades\Storage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -21,9 +23,9 @@ class DataEndpointsTest extends TestCase
             'product finder filter panel' => ['/api/product-finder/filter-panel', 'app/private/product-finder/porcelaintiles/', 'filter-panel', 'product_finder_api'],
             'product finder data' => ['/api/product-finder/product-data', 'app/private/product-finder/porcelaintiles/', 'tile-filter-data', 'product_finder_api'],
             'product finder ref data' => ['/api/product-finder/product-ref-data', 'app/private/product-finder/porcelaintiles/', 'tile-filter-ref-data', 'product_finder_api'],
-            'tm colours filter panel' => ['/api/tm-colours/filter-panel', 'app/private/tailormade/', 'filter-panel', 'tm_colours_api'],
-            'tm colours data' => ['/api/tm-colours/colour-data', 'app/private/tailormade/', 'tile-filter-data', 'tm_colours_api'],
-            'tm colours ref data' => ['/api/tm-colours/colour-ref-data', 'app/private/tailormade/', 'tile-filter-ref-data', 'tm_colours_api'],
+            'tm colours filter panel' => ['/api/tm-colours/filter-panel', 'app/private/product-finder/tailormade/', 'filter-panel', 'tm_colours_api'],
+            'tm colours data' => ['/api/tm-colours/colour-data', 'app/private/product-finder/tailormade/', 'tile-filter-data', 'tm_colours_api'],
+            'tm colours ref data' => ['/api/tm-colours/colour-ref-data', 'app/private/product-finder/tailormade/', 'tile-filter-ref-data', 'tm_colours_api'],
         ];
     }
 
@@ -48,6 +50,40 @@ class DataEndpointsTest extends TestCase
             ->getJson($uri)
             ->assertOk()
             ->assertExactJson($payload);
+    }
+
+    public function test_product_finder_and_tm_colours_keep_separate_cached_data_after_refresh(): void
+    {
+        config(['cache.default' => 'array']);
+        Storage::fake('local');
+        $originalStoragePath = storage_path();
+        $this->app->useStoragePath(Storage::disk('local')->path(''));
+
+        try {
+            $save = app(ResourceSaveService::class);
+            $ptPath = 'app/private/product-finder/porcelaintiles/';
+            $tmPath = 'app/private/product-finder/tailormade/';
+            $filename = 'tile-filter-ref-data.json';
+            $save->saveResource($filename, $ptPath, [['brand' => 'pt']], false);
+            $save->saveResource($filename, $tmPath, [['brand' => 'tm']], false);
+
+            $this->withApiToken('product_finder_api')
+                ->getJson('/api/product-finder/product-ref-data')
+                ->assertOk()->assertExactJson([['brand' => 'pt']]);
+            $this->withApiToken('tm_colours_api')
+                ->getJson('/api/tm-colours/colour-ref-data')
+                ->assertOk()->assertExactJson([['brand' => 'tm']]);
+
+            $save->saveResource($filename, $tmPath, [['brand' => 'updated tm']], false);
+
+            $this->getJson('/api/tm-colours/colour-ref-data')
+                ->assertOk()->assertExactJson([['brand' => 'updated tm']]);
+            $this->withApiToken('product_finder_api')
+                ->getJson('/api/product-finder/product-ref-data')
+                ->assertOk()->assertExactJson([['brand' => 'pt']]);
+        } finally {
+            $this->app->useStoragePath($originalStoragePath);
+        }
     }
 
     public function test_pt_site_templates_excludes_hidden_fields_for_every_item(): void

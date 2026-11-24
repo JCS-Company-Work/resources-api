@@ -2,61 +2,29 @@
 
 namespace Tests\Feature;
 
-use App\Http\Controllers\Api\ResourceUploadController;
 use App\Http\Middleware\VerifyApiToken;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class ResourceUploadAuthTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        // Replace the real controller so no files are written.
-        $this->mock(ResourceUploadController::class, function ($mock) {
-            $mock->shouldReceive('update')
-                ->andReturn(response()->json(['message' => 'Mock upload']));
-        });
-    }
-
-    public function test_upload_rejects_a_missing_token(): void
-    {
-        $this->putJson('/api/resources/samples-tool/pt', ['test' => 'data'])
-            ->assertUnauthorized();
-    }
-
-    public function test_upload_rejects_an_invalid_token(): void
-    {
-        $this->withHeader('X-API-Token', 'wrong-token')
-            ->putJson('/api/resources/samples-tool/pt', ['test' => 'data'])
-            ->assertUnauthorized();
-    }
-
-    public function test_upload_accepts_a_valid_token(): void
-    {
-        $this->withApiToken('resource_api')
-            ->putJson('/api/resources/samples-tool/pt', ['test' => 'data'])
-            ->assertOk()
-            ->assertJson(['message' => 'Mock upload']);
-    }
-
-    public function test_upload_rejects_other_clients_keys(): void
-    {
-        foreach (array_diff(array_keys(self::API_KEYS), ['resource_api']) as $client) {
-            $this->withApiToken($client)
-                ->putJson('/api/resources/samples-tool/pt', ['test' => 'data'])
-                ->assertUnauthorized();
-        }
-    }
-
     public function test_an_empty_configured_key_never_authenticates(): void
     {
         config(['services.api_keys' => ['resource_api' => null, 'samples_api' => '']]);
 
         $this->withHeader('X-API-Token', 'anything')
-            ->putJson('/api/resources/samples-tool/pt', ['test' => 'data'])
+            ->putJson('/api/resources/refresh-all')
             ->assertUnauthorized();
+    }
+
+    public function test_removed_upload_routes_are_not_available(): void
+    {
+        $this->withApiToken('resource_api')
+            ->putJson('/api/resources/samples-tool/pt', ['test' => 'data'])
+            ->assertNotFound();
+
+        $this->putJson('/api/resources/product-finder/porcelaintiles/filter-panel', ['test' => 'data'])
+            ->assertNotFound();
     }
 
     public function test_every_api_route_requires_a_token(): void

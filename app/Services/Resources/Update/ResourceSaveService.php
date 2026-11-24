@@ -2,6 +2,7 @@
 
 namespace App\Services\Resources\Update;
 
+use App\Services\GetDataService;
 use App\Services\LiteSpeedPurgeService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -45,6 +46,7 @@ class ResourceSaveService
 
         // Clear the cache for the updated resource.
         Cache::forget(pathinfo($filename, PATHINFO_FILENAME));
+        Cache::forget(GetDataService::cacheKey($resourcePath, pathinfo($filename, PATHINFO_FILENAME)));
 
         if ($purgeCache) {
             $this->purge($filename);

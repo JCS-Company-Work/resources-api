@@ -111,6 +111,28 @@ test('it chooses attributes using legacy collection and range ordering', functio
         ->and($colours['3']->getAttribute('thickness'))->toBe('6mm');
 });
 
+test('it orders colours by legacy collection and range order', function () {
+    $rows = [
+        ['postID' => '1', 'productCode' => '1', 'factoryColour' => 'Pietre', 'appearsOn' => 'all', 'ppCollection' => 'TM6', 'ppRange' => 'Pietre'],
+        ['postID' => '2', 'productCode' => '2', 'factoryColour' => 'Zebra', 'appearsOn' => 'all', 'ppCollection' => 'TM12', 'ppRange' => 'Stone'],
+        ['postID' => '3', 'productCode' => '3', 'factoryColour' => 'Alpha', 'appearsOn' => 'all', 'ppCollection' => 'TM12', 'ppRange' => 'Marble'],
+        ['postID' => '4', 'productCode' => '4', 'factoryColour' => 'Shared', 'appearsOn' => 'all', 'ppCollection' => 'TMGrip', 'ppRange' => 'Stone'],
+        ['postID' => '4', 'productCode' => '5', 'factoryColour' => 'Shared', 'appearsOn' => 'all', 'ppCollection' => 'TM6', 'ppRange' => 'Marmi'],
+        ['postID' => '5', 'productCode' => '6', 'factoryColour' => 'Alabaster', 'appearsOn' => 'all', 'ppCollection' => 'TM6', 'ppRange' => 'Marmi'],
+        ['postID' => '6', 'productCode' => '7', 'factoryColour' => 'Apple', 'appearsOn' => 'all', 'ppCollection' => 'TM12', 'ppRange' => 'Stone'],
+        ['postID' => '7', 'productCode' => '8', 'factoryColour' => 'Grip', 'appearsOn' => 'all', 'ppCollection' => 'TMGrip', 'ppRange' => 'Stone'],
+    ];
+
+    $document = new DOMDocument;
+    $document->loadXML((new XmlResourceService)->generate('tailor-made', $rows));
+    $ids = [];
+    foreach ($document->getElementsByTagName('colour') as $colour) {
+        $ids[] = $colour->getAttribute('id');
+    }
+
+    expect($ids)->toBe(['5', '4', '1', '6', '2', '3', '7']);
+});
+
 test('it includes products assigned to standalone XML brands', function (string $brand, string $appearsOn) {
     $xml = (new XmlResourceService)->generate($brand, [
         [

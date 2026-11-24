@@ -43,6 +43,7 @@ return [
         'tm_colours_api' => env('TM_COLOURS_API_TOKEN'),
         'samples_api' => env('SAMPLES_API_TOKEN'),
         'florimuk' => env('FLORIMUK_API_TOKEN'),
+        'xml' => env('XML_API_TOKEN')
     ],
     'cache_purge' => [
         'hub' => [

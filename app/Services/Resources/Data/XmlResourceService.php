@@ -37,11 +37,6 @@ class XmlResourceService
     ];
 
     /**
-     * TM6 range order for sorting products.
-     */
-    private const TM6_RANGE_ORDER = ['marmi', 'onici', 'precious', 'pietre', 'cemento', 'metalli'];
-
-    /**
      * Generate the legacy colours XML for one brand.
      *
      * @param  array<int, array<string, mixed>>  $rows
@@ -80,16 +75,20 @@ class XmlResourceService
         }
 
         $attributeRows = $this->legacyAttributeRows($attributeGroups);
-        $products = array_values($products);
-        usort($products, fn (array $left, array $right): int => $this->compareProducts($left[0], $right[0]));
+        $orderedProducts = [];
+        foreach ($attributeRows as $productKey => $attributeRow) {
+            if (isset($products[$productKey])) {
+                $orderedProducts[$productKey] = $products[$productKey];
+            }
+        }
+        $orderedProducts += $products;
 
         $document = new DOMDocument('1.0', 'UTF-8');
         $document->formatOutput = true;
         $root = $document->createElement('colours');
         $document->appendChild($root);
 
-        foreach ($products as $productRows) {
-            $productKey = (string) $this->value($productRows[0], 'factoryColour').'-'.(string) $this->value($productRows[0], 'postID');
+        foreach ($orderedProducts as $productKey => $productRows) {
             $root->appendChild($this->createColourNode($document, $brand, $productRows, $attributeRows[$productKey] ?? $productRows[0]));
         }
 
@@ -619,39 +618,6 @@ class XmlResourceService
         }
 
         return '';
-    }
-
-    /**
-     * @param  array<string, mixed>  $left
-     * @param  array<string, mixed>  $right
-     * @return int
-     */
-    private function compareProducts(array $left, array $right): int
-    {
-        $leftCollection = strtolower((string) $this->value($left, 'ppCollection'));
-        $rightCollection = strtolower((string) $this->value($right, 'ppCollection'));
-
-        if ($leftCollection === 'tm6' && $rightCollection === 'tm6') {
-            $leftRange = array_search(strtolower((string) $this->value($left, 'ppRange')), self::TM6_RANGE_ORDER, true);
-            $rightRange = array_search(strtolower((string) $this->value($right, 'ppRange')), self::TM6_RANGE_ORDER, true);
-
-            $rangeComparison = ($leftRange === false ? PHP_INT_MAX : $leftRange)
-                <=> ($rightRange === false ? PHP_INT_MAX : $rightRange);
-
-            if ($rangeComparison !== 0) {
-                return $rangeComparison;
-            }
-        }
-
-        return [
-            $leftCollection,
-            strtolower((string) $this->value($left, 'ppRange')),
-            strtolower((string) $this->value($left, 'factoryColour')),
-        ] <=> [
-            $rightCollection,
-            strtolower((string) $this->value($right, 'ppRange')),
-            strtolower((string) $this->value($right, 'factoryColour')),
-        ];
     }
 
     /**
