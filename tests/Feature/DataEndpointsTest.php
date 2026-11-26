@@ -111,6 +111,26 @@ class DataEndpointsTest extends TestCase
             ]);
     }
 
+    public function test_prices_route_returns_prices_instead_of_matching_a_product_id(): void
+    {
+        $items = [
+            ['postID' => 1, 'price' => '25', 'partnerPrice' => '15'],
+            ['postID' => 2, 'price' => '35', 'partnerPrice' => '20'],
+        ];
+
+        $this->mock(GetDataService::class, function ($mock) use ($items) {
+            $mock->shouldReceive('getData')->once()->with('app/private/combined-data/', 'allbrands')->andReturn($items);
+        });
+
+        $this->withApiToken('combined_data_api')
+            ->getJson('/api/products/prices')
+            ->assertOk()
+            ->assertExactJson([
+                ['postID' => 1, 'price' => '25'],
+                ['postID' => 2, 'price' => '35'],
+            ]);
+    }
+
     public function test_product_finder_all_combines_every_dataset(): void
     {
         $path = 'app/private/product-finder/porcelaintiles/';

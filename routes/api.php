@@ -19,6 +19,7 @@ Route::get('/user', function (Request $request) {
 // Main PT sheet data routes
 Route::middleware(VerifyApiToken::using('combined_data_api'))->group(function () {
     Route::get('/products', [CombinedDataController::class, 'getAllProducts']);
+    Route::get('/products/prices', [CombinedDataController::class, 'getPrices']);
     Route::get('/products/{id}', [CombinedDataController::class, 'getSingleProduct']);
     Route::get('/ranges/{id}', [CombinedDataController::class, 'getSingleRange']);
     Route::get('/pending', [CombinedDataController::class, 'getPendingProducts']);

@@ -92,6 +92,12 @@ class CombinedDataController extends Controller
         return response()->json($range);
     }
 
+    /**
+     * Get all PT site templates
+     *
+     * @param GetDataService $dataService
+     * @return JsonResponse
+     */
     public function getPtSiteTemplates(GetDataService $dataService)
     {
 
@@ -113,6 +119,37 @@ class CombinedDataController extends Controller
         ];
 
         $templates = collect($ptSiteTemplates)
+            ->map(fn (array $item): array => Arr::except($item, $hiddenFields))
+            ->values();
+
+        return response()->json($templates);
+    }
+
+    /**
+     * Get combined data prices
+     *
+     * @param GetDataService $dataService
+     * @return JsonResponse
+     */
+    public function getPrices(GetDataService $dataService)
+    {
+        // Fetch combined data prices from the data service
+        $data = $dataService->getData('app/private/combined-data/', 'allbrands');
+
+        $hiddenFields = [
+            'partnerPrice',
+            'florimukPrice',
+            'manCode',
+            'mesh',
+            'factoryCollection',
+            'factoryRange',
+            'factoryColour',
+            'factorySurface',
+            'florimukItem',
+            'agreement',
+        ];
+
+        $templates = collect($data)
             ->map(fn (array $item): array => Arr::except($item, $hiddenFields))
             ->values();
 
